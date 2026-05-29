@@ -1,3 +1,6 @@
+string? handleInputOption;
+int parsedOption = 0;
+
 while (true)
 {
     Console.WriteLine("=== CALCULADORA ===");
@@ -9,36 +12,74 @@ while (true)
     Console.WriteLine();
 
     Console.Write("Escolha uma opção: ");
-    string handleInputOption = Console.ReadLine();
-    Console.WriteLine();
+    handleInputOption = Console.ReadLine();
+    bool parsed = int.TryParse(handleInputOption, out int option);
 
-    if (handleInputOption == "0") break;
+    if (parsed && option == 0) break;
 
-    Console.Write("Digite o primeiro número da operação: ");
-    string handleFirstNumber = Console.ReadLine();
-    Console.WriteLine();
-
-    Console.Write("Digite o segundo número da operação: ");
-    string handleSecondNumber = Console.ReadLine();
-    Console.WriteLine();
-
-    double firstNumber = double.Parse(handleFirstNumber);
-    double secondNumber = double.Parse(handleSecondNumber);
-
-    switch (handleInputOption)
+    if (parsed && option >= 1 && option <= 4)
     {
-        case "1":
-            Console.WriteLine($"Resultado {firstNumber + secondNumber}");
-            break;
-        case "2":
-            Console.WriteLine($"Resultado {firstNumber - secondNumber}");
-            break;
-        case "3":
-            Console.WriteLine($"Resultado {firstNumber * secondNumber}");
-            break;
-        case "4":
-            Console.WriteLine($"Resultado {firstNumber / secondNumber}");
-            break;
+        parsedOption = option;
+        break;
     }
+
+    Console.WriteLine("Opção inválida, tente novamente..");
     Console.WriteLine();
 }
+
+string? handleInputFirstNumber;
+double parsedFirstNumber;
+
+while (true)
+{
+    Console.Write("Digite o primeiro número: ");
+    handleInputFirstNumber = Console.ReadLine();
+    bool parsed = double.TryParse(handleInputFirstNumber, out double number);
+
+    if (parsed)
+    {
+        parsedFirstNumber = number;
+        break;
+    }
+
+    Console.WriteLine("Número inválido, tente novamente..");
+    Console.WriteLine();
+}
+
+string? handleInputSecondNumber;
+double parsedSecondNumber;
+
+while (true)
+{
+    Console.Write("Digite o segundo número: ");
+    handleInputSecondNumber = Console.ReadLine();
+    bool parsed = double.TryParse(handleInputSecondNumber, out double number);
+
+    if (parsed)
+    {
+        parsedSecondNumber = number;
+        break;
+    }
+
+    Console.WriteLine("Número inválido, tente novamente..");
+    Console.WriteLine();
+}
+
+
+switch (parsedOption)
+{
+    case 1:
+        Console.WriteLine($"Resultado {parsedFirstNumber + parsedSecondNumber}");
+        break;
+    case 2:
+        Console.WriteLine($"Resultado {parsedFirstNumber - parsedSecondNumber}");
+        break;
+    case 3:
+        Console.WriteLine($"Resultado {parsedFirstNumber * parsedSecondNumber}");
+        break;
+    case 4:
+        Console.WriteLine($"Resultado {parsedFirstNumber / parsedSecondNumber}");
+        break;
+}
+
+Console.WriteLine();
