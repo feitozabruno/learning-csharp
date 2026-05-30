@@ -1,8 +1,7 @@
-string? handleInputOption;
-int parsedOption;
-
-void Menu()
+int Menu()
 {
+    int parsedOption = 0;
+
     while (true)
     {
         Console.WriteLine("=== CALCULADORA ===");
@@ -14,11 +13,10 @@ void Menu()
         Console.WriteLine();
 
         Console.Write("Escolha uma opção: ");
-        handleInputOption = Console.ReadLine();
-        parsedOption = 0;
+        string? handleInputOption = Console.ReadLine();
         bool parsed = int.TryParse(handleInputOption, out int option);
 
-        if (option == 0) break;
+        if (parsed && option == 0) break;
 
         if (parsed && option >= 1 && option <= 4)
         {
@@ -29,58 +27,39 @@ void Menu()
         Console.WriteLine("Opção inválida, tente novamente..");
         Console.WriteLine();
     }
+
+    return parsedOption;
 }
 
-string? handleInputFirstNumber;
-double parsedFirstNumber;
-
-void CaptureFirstNumber()
+double CaptureNumber(string instruction)
 {
+    double parsedNumber;
+
     while (true)
     {
-        Console.Write("Digite o primeiro número: ");
-        handleInputFirstNumber = Console.ReadLine();
-        bool parsed = double.TryParse(handleInputFirstNumber, out double number);
+        Console.Write(instruction);
+        string? handleInputNumber = Console.ReadLine();
+        bool parsed = double.TryParse(handleInputNumber, out double number);
 
         if (parsed)
         {
-            parsedFirstNumber = number;
+            parsedNumber = number;
             break;
         }
 
         Console.WriteLine("Número inválido, tente novamente..");
         Console.WriteLine();
     }
+
+    return parsedNumber;
 }
 
-string? handleInputSecondNumber;
-double parsedSecondNumber;
-
-void CaptureSecondNumber()
+while (true)
 {
-    while (true)
-    {
-        Console.Write("Digite o segundo número: ");
-        handleInputSecondNumber = Console.ReadLine();
-        bool parsed = double.TryParse(handleInputSecondNumber, out double number);
-
-        if (parsed)
-        {
-            parsedSecondNumber = number;
-            break;
-        }
-
-        Console.WriteLine("Número inválido, tente novamente..");
-        Console.WriteLine();
-    }
-}
-
-do
-{
-    Menu();
+    int parsedOption = Menu();
     if (parsedOption == 0) break;
-    CaptureFirstNumber();
-    CaptureSecondNumber();
+    double parsedFirstNumber = CaptureNumber("Digite o primeiro número: ");
+    double parsedSecondNumber = CaptureNumber("Digite o segundo número: ");
 
     switch (parsedOption)
     {
@@ -99,4 +78,4 @@ do
     }
 
     Console.WriteLine();
-} while (parsedOption != 0);
+}
