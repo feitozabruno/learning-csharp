@@ -1,81 +1,136 @@
-int Menu()
-{
-    int parsedOption = 0;
+Calculator.Run();
 
-    while (true)
+class Calculator
+{
+    private static void ShowMenu()
     {
         Console.WriteLine("=== CALCULADORA ===");
         Console.WriteLine("1 - Somar");
         Console.WriteLine("2 - Subtrair");
         Console.WriteLine("3 - Multiplicar");
         Console.WriteLine("4 - Dividir");
+        Console.WriteLine("5 - Histórico");
         Console.WriteLine("0 - Sair");
         Console.WriteLine();
-
         Console.Write("Escolha uma opção: ");
-        string? handleInputOption = Console.ReadLine();
-        bool parsed = int.TryParse(handleInputOption, out int option);
+    }
 
-        if (parsed && option == 0) break;
+    private static int SelectOption()
+    {
+        int parsedOption = 0;
 
-        if (parsed && option >= 1 && option <= 4)
+        while (true)
         {
-            parsedOption = option;
-            break;
+            string? handleInputOption = Console.ReadLine();
+            bool parsed = int.TryParse(handleInputOption, out int option);
+
+            if (parsed && option == 0) break;
+
+            if (parsed && option >= 1 && option <= 5)
+            {
+                parsedOption = option;
+                break;
+            }
+
+            Console.WriteLine("Opção inválida, tente novamente..");
+            Console.WriteLine();
+            ShowMenu();
         }
 
-        Console.WriteLine("Opção inválida, tente novamente..");
-        Console.WriteLine();
+        return parsedOption;
     }
 
-    return parsedOption;
-}
-
-double CaptureNumber(string instruction)
-{
-    double parsedNumber;
-
-    while (true)
+    private static double CaptureNumber(string instruction)
     {
-        Console.Write(instruction);
-        string? handleInputNumber = Console.ReadLine();
-        bool parsed = double.TryParse(handleInputNumber, out double number);
+        double parsedNumber;
 
-        if (parsed)
+        while (true)
         {
-            parsedNumber = number;
-            break;
+            Console.Write(instruction);
+            string? handleInputNumber = Console.ReadLine();
+            bool parsed = double.TryParse(handleInputNumber, out double number);
+
+            if (parsed)
+            {
+                parsedNumber = number;
+                break;
+            }
+
+            Console.WriteLine("Número inválido, tente novamente..");
+            Console.WriteLine();
         }
 
-        Console.WriteLine("Número inválido, tente novamente..");
-        Console.WriteLine();
+        return parsedNumber;
     }
 
-    return parsedNumber;
-}
-
-while (true)
-{
-    int parsedOption = Menu();
-    if (parsedOption == 0) break;
-    double parsedFirstNumber = CaptureNumber("Digite o primeiro número: ");
-    double parsedSecondNumber = CaptureNumber("Digite o segundo número: ");
-
-    switch (parsedOption)
+    private static void ShowHistory(List<string> operations)
     {
-        case 1:
-            Console.WriteLine($"Resultado: {parsedFirstNumber + parsedSecondNumber}");
-            break;
-        case 2:
-            Console.WriteLine($"Resultado: {parsedFirstNumber - parsedSecondNumber}");
-            break;
-        case 3:
-            Console.WriteLine($"Resultado: {parsedFirstNumber * parsedSecondNumber}");
-            break;
-        case 4:
-            Console.WriteLine($"Resultado: {parsedFirstNumber / parsedSecondNumber}");
-            break;
+        if (operations.Count > 0)
+        {
+            Console.WriteLine("Histórico de Operações:");
+            foreach (string operation in operations)
+            {
+                Console.WriteLine(operation);
+            }
+            Console.WriteLine();
+            return;
+        }
+
+        Console.WriteLine("Sem histórico de operações");
+        Console.WriteLine();
+        return;
     }
 
-    Console.WriteLine();
+    public static void Run()
+    {
+        double firstNumber;
+        double secondNumber;
+        List<string> operations = new List<string>();
+
+        while (true)
+        {
+            ShowMenu();
+            int option = SelectOption();
+
+            if (option == 0) break;
+
+            if (option == 5)
+            {
+                ShowHistory(operations);
+            }
+
+            if (option >= 1 && option <= 4)
+            {
+                firstNumber = CaptureNumber("Digite o primeiro número: ");
+                secondNumber = CaptureNumber("Digite o segundo número: ");
+
+                switch (option)
+                {
+                    case 1:
+                        double result1 = firstNumber + secondNumber;
+                        Console.WriteLine($"Resultado: {result1}");
+                        operations.Add($"{firstNumber} + {secondNumber} = {result1}");
+                        break;
+                    case 2:
+                        double result2 = firstNumber - secondNumber;
+                        Console.WriteLine($"Resultado: {result2}");
+                        operations.Add($"{firstNumber} - {secondNumber} = {result2}");
+                        break;
+                    case 3:
+                        double result3 = firstNumber * secondNumber;
+                        Console.WriteLine($"Resultado: {result3}");
+                        operations.Add($"{firstNumber} * {secondNumber} = {result3}");
+                        break;
+                    case 4:
+                        double result4 = firstNumber / secondNumber;
+                        Console.WriteLine($"Resultado: {result4}");
+                        operations.Add($"{firstNumber} / {secondNumber} = {result4}");
+                        break;
+                }
+
+                Console.WriteLine();
+            }
+        }
+
+    }
 }
