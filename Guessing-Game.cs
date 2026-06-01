@@ -39,14 +39,18 @@ class GuessingGame
     {
         ShowMenu();
         int randomNumber = GenerateRandomNumber();
+        int attempts = 0;
+        Console.WriteLine(randomNumber);
 
         while (true)
         {
             int guess = TakeGuess();
+            attempts += 1;
 
             if (randomNumber == guess)
             {
-                Console.WriteLine("Parabéns! Você acertou!");
+                string personalMessage = attempts == 1 ? "de primeira!" : $"em {attempts} tentativas!";
+                Console.WriteLine($"Parabéns! Você acertou {personalMessage}");
                 Console.WriteLine();
                 break;
             }
