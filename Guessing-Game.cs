@@ -5,15 +5,44 @@ class GuessingGame
     private static void ShowMenu()
     {
         Console.WriteLine("=== JOGO DE ADIVINHAÇÃO ===");
-        Console.WriteLine("");
-        Console.WriteLine("Estou pensando em um número entre 1 e 100");
-        Console.WriteLine("");
+        Console.WriteLine();
+        Console.WriteLine("1 - Fácil");
+        Console.WriteLine("2 - Médio");
+        Console.WriteLine("3 - Díficil");
+        Console.WriteLine("0 - Sair");
+        Console.WriteLine();
+        Console.Write("Escolha uma opção: ");
     }
 
-    private static int GenerateRandomNumber()
+    private static int SelectDifficulty()
+    {
+        int difficulty = 0;
+
+        while (true)
+        {
+            string? handleInputOption = Console.ReadLine();
+            bool parsed = int.TryParse(handleInputOption, out int option);
+
+            if (parsed && option == 0) break;
+
+            if (parsed && option >= 1 && option <= 3)
+            {
+                difficulty = option;
+                break;
+            }
+
+            Console.WriteLine("Opção inválida, tente novamente..");
+            Console.WriteLine();
+            ShowMenu();
+        }
+
+        return difficulty;
+    }
+
+    private static int GenerateRandomNumber(int min, int max)
     {
         Random random = new Random();
-        int randomNumber = random.Next(1, 101);
+        int randomNumber = random.Next(min, max + 1);
         return randomNumber;
     }
 
@@ -38,9 +67,17 @@ class GuessingGame
     public static void Run()
     {
         ShowMenu();
-        int randomNumber = GenerateRandomNumber();
+        int difficulty = SelectDifficulty();
+
+        if (difficulty == 0)
+        {
+            return;
+        }
+
+        int maxRandomNumber = difficulty == 1 ? 10 : difficulty == 2 ? 50 : 100;
+        int randomNumber = GenerateRandomNumber(1, maxRandomNumber);
+
         int attempts = 0;
-        Console.WriteLine(randomNumber);
 
         while (true)
         {
