@@ -1,3 +1,5 @@
+// DESAFIO EXTRA (Você quer jogar novamente?).
+
 GuessingGame.Run();
 
 class GuessingGame
@@ -6,9 +8,9 @@ class GuessingGame
     {
         Console.WriteLine("=== JOGO DE ADIVINHAÇÃO ===");
         Console.WriteLine();
-        Console.WriteLine("1 - Fácil");
-        Console.WriteLine("2 - Médio");
-        Console.WriteLine("3 - Díficil");
+        Console.WriteLine("1 - Fácil (1 - 10)");
+        Console.WriteLine("2 - Médio (1 - 50)");
+        Console.WriteLine("3 - Díficil (1 - 100)");
         Console.WriteLine("0 - Sair");
         Console.WriteLine();
         Console.Write("Escolha uma opção: ");
@@ -76,18 +78,29 @@ class GuessingGame
 
         int maxRandomNumber = difficulty == 1 ? 10 : difficulty == 2 ? 50 : 100;
         int randomNumber = GenerateRandomNumber(1, maxRandomNumber);
+        int maxAttempts = difficulty == 1 ? 5 : difficulty == 2 ? 8 : 10;
 
         int attempts = 0;
 
         while (true)
         {
+            if (attempts == maxAttempts)
+            {
+                Console.WriteLine("Game Over!");
+                Console.WriteLine($"O número era: {randomNumber}");
+                break;
+            }
+
             int guess = TakeGuess();
+
             attempts += 1;
 
             if (randomNumber == guess)
             {
                 string personalMessage = attempts == 1 ? "de primeira!" : $"em {attempts} tentativas!";
+                int standAttempts = difficulty == 1 ? 4 : difficulty == 6 ? 8 : 7;
                 Console.WriteLine($"Parabéns! Você acertou {personalMessage}");
+                Console.WriteLine($"A estratégia ideal precisaria de no máximo {standAttempts}.");
                 Console.WriteLine();
                 break;
             }
@@ -95,12 +108,14 @@ class GuessingGame
             if (randomNumber > guess)
             {
                 Console.WriteLine("O número secreto é maior.");
+                Console.WriteLine($"Faltam {maxAttempts - attempts} tentativas.");
                 Console.WriteLine();
             }
 
             if (randomNumber < guess)
             {
                 Console.WriteLine("O número secreto é menor.");
+                Console.WriteLine($"Faltam {maxAttempts - attempts} tentativas.");
                 Console.WriteLine();
             }
         }
