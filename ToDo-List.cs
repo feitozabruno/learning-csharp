@@ -1,0 +1,108 @@
+ToDoList.Run();
+
+class ToDoList
+{
+    private static void ShowMenu()
+    {
+        Console.WriteLine("=== TO-DO LIST ===");
+        Console.WriteLine();
+        Console.WriteLine("1. Adicionar tarefa");
+        Console.WriteLine("2. Listar tarefas");
+        Console.WriteLine("3. Concluir tarefa");
+        Console.WriteLine("4. Remover tarefa");
+        Console.WriteLine("0. Sair");
+        Console.WriteLine();
+        Console.Write("Escolha uma opção: ");
+    }
+
+    private static int SelectOption()
+    {
+        ShowMenu();
+        int option = 0;
+        while (true)
+        {
+            string? handleInputOption = Console.ReadLine();
+            bool parsed = int.TryParse(handleInputOption, out int parsedOption);
+
+            if (parsed && parsedOption == 0) break;
+            if (parsed && parsedOption >= 1 && parsedOption <= 4)
+            {
+                option = parsedOption;
+                break;
+            }
+
+            Console.WriteLine("Opção inválida, tente novamente..");
+        }
+        return option;
+    }
+
+    private static Task CreateTask(string title)
+    {
+        Task newTask = new Task { Title = title };
+        return newTask;
+    }
+
+    private static void ListTasks(List<Task> tasks)
+    {
+        if (tasks.Count == 0)
+        {
+            Console.WriteLine("Você não possui tarefas, adicione algumas!");
+            return;
+        }
+
+        for (int i = 0; i < tasks.Count; i++)
+        {
+            string personalDone = tasks[i].Done ? "X" : " ";
+            Console.WriteLine($"{i + 1} - [{personalDone}] {tasks[i].Title}");
+        }
+
+    }
+
+    public static void Run()
+    {
+        List<Task> taskList = new List<Task>();
+
+        while (true)
+        {
+            int option = SelectOption();
+            if (option == 0) break;
+
+            if (option == 1)
+            {
+                string validTask;
+
+                while (true)
+                {
+                    Console.Write("Digite o título da tarefa: ");
+                    string? task = Console.ReadLine();
+                    bool validateTask = string.IsNullOrWhiteSpace(task);
+
+                    if (!validateTask)
+                    {
+                        validTask = task!;
+                        break;
+                    }
+
+                    Console.WriteLine("Título inválido, tente novamente..");
+                }
+
+                Task newTask = CreateTask(validTask);
+                taskList.Add(newTask);
+                Console.WriteLine($"Tarefa adicionada com sucesso.");
+                Console.WriteLine();
+            }
+
+            if (option == 2)
+            {
+                ListTasks(taskList);
+                Console.WriteLine();
+            }
+        }
+    }
+}
+
+class Task
+{
+    public required string Title { get; set; }
+    public bool Done { get; set; } = false;
+}
