@@ -1,5 +1,3 @@
-// DESAFIO EXTRA (Você quer jogar novamente?).
-
 GuessingGame.Run();
 
 class GuessingGame
@@ -18,6 +16,8 @@ class GuessingGame
 
     private static int SelectDifficulty()
     {
+        ShowMenu();
+
         int difficulty = 0;
 
         while (true)
@@ -41,11 +41,33 @@ class GuessingGame
         return difficulty;
     }
 
+    private static bool TryAgain()
+    {
+        while (true)
+        {
+            Console.WriteLine("Deseja jogar novamente?");
+            Console.WriteLine("1 - Sim");
+            Console.WriteLine("2 - Não");
+            Console.Write("Escolha uma opção: ");
+
+            string? handleInputOption = Console.ReadLine();
+            Console.WriteLine();
+
+            bool parsed = int.TryParse(handleInputOption, out int option);
+
+            if (parsed && option == 2) return false;
+
+            if (parsed && option == 1) return true;
+
+            Console.WriteLine("Opção inválida, tente novamente..");
+            Console.WriteLine();
+        }
+    }
+
     private static int GenerateRandomNumber(int min, int max)
     {
         Random random = new Random();
-        int randomNumber = random.Next(min, max + 1);
-        return randomNumber;
+        return random.Next(min, max + 1);
     }
 
     private static int TakeGuess()
@@ -68,56 +90,57 @@ class GuessingGame
 
     public static void Run()
     {
-        ShowMenu();
-        int difficulty = SelectDifficulty();
-
-        if (difficulty == 0)
-        {
-            return;
-        }
-
-        int maxRandomNumber = difficulty == 1 ? 10 : difficulty == 2 ? 50 : 100;
-        int randomNumber = GenerateRandomNumber(1, maxRandomNumber);
-        int maxAttempts = difficulty == 1 ? 5 : difficulty == 2 ? 8 : 10;
-
-        int attempts = 0;
-
         while (true)
         {
-            if (attempts == maxAttempts)
+            int difficulty = SelectDifficulty();
+            if (difficulty == 0) return;
+
+            int maxRandomNumber = difficulty == 1 ? 10 : difficulty == 2 ? 50 : 100;
+            int randomNumber = GenerateRandomNumber(1, maxRandomNumber);
+
+            int maxAttempts = difficulty == 1 ? 5 : difficulty == 2 ? 8 : 10;
+            int attempts = 0;
+
+            while (true)
             {
-                Console.WriteLine("Game Over!");
-                Console.WriteLine($"O número era: {randomNumber}");
-                break;
+                if (attempts == maxAttempts)
+                {
+                    Console.WriteLine("Game Over!");
+                    Console.WriteLine($"O número era: {randomNumber}");
+                    Console.WriteLine();
+                    break;
+                }
+
+                int guess = TakeGuess();
+                attempts += 1;
+
+                if (randomNumber == guess)
+                {
+                    string personalMessage = attempts == 1 ? "de primeira!" : $"em {attempts} tentativas!";
+                    int standAttempts = difficulty == 1 ? 4 : difficulty == 2 ? 6 : 7;
+                    Console.WriteLine($"Parabéns! Você acertou {personalMessage}");
+                    Console.WriteLine($"A estratégia ideal precisaria de no máximo {standAttempts}.");
+                    Console.WriteLine();
+                    break;
+                }
+
+                if (randomNumber > guess)
+                {
+                    Console.WriteLine("O número secreto é maior.");
+                    Console.WriteLine($"Faltam {maxAttempts - attempts} tentativas.");
+                    Console.WriteLine();
+                }
+
+                if (randomNumber < guess)
+                {
+                    Console.WriteLine("O número secreto é menor.");
+                    Console.WriteLine($"Faltam {maxAttempts - attempts} tentativas.");
+                    Console.WriteLine();
+                }
             }
 
-            int guess = TakeGuess();
-
-            attempts += 1;
-
-            if (randomNumber == guess)
-            {
-                string personalMessage = attempts == 1 ? "de primeira!" : $"em {attempts} tentativas!";
-                int standAttempts = difficulty == 1 ? 4 : difficulty == 6 ? 8 : 7;
-                Console.WriteLine($"Parabéns! Você acertou {personalMessage}");
-                Console.WriteLine($"A estratégia ideal precisaria de no máximo {standAttempts}.");
-                Console.WriteLine();
-                break;
-            }
-
-            if (randomNumber > guess)
-            {
-                Console.WriteLine("O número secreto é maior.");
-                Console.WriteLine($"Faltam {maxAttempts - attempts} tentativas.");
-                Console.WriteLine();
-            }
-
-            if (randomNumber < guess)
-            {
-                Console.WriteLine("O número secreto é menor.");
-                Console.WriteLine($"Faltam {maxAttempts - attempts} tentativas.");
-                Console.WriteLine();
-            }
+            bool tryAgain = TryAgain();
+            if (!tryAgain) break;
         }
     }
 }
