@@ -56,6 +56,54 @@ class ToDoList
             Console.WriteLine($"{i + 1} - [{personalDone}] {tasks[i].Title}");
         }
 
+        Console.WriteLine();
+        Console.WriteLine("[ ] = pendente");
+        Console.WriteLine("[X] = concluída");
+        Console.WriteLine();
+    }
+
+    private static int CaptureTaskNumber(string message, List<Task> tasks)
+    {
+        int task = 0;
+
+        while (true)
+        {
+            Console.Write(message);
+            string? handleInput = Console.ReadLine();
+            bool parsed = int.TryParse(handleInput, out int parsedTask);
+
+            if (parsed && parsedTask >= 1 && parsedTask <= tasks.Count)
+            {
+                task = parsedTask - 1;
+                break;
+            }
+
+            Console.WriteLine("Essa tarefa não existe, tente novamente..");
+        }
+
+        return task;
+    }
+
+    private static void DoneTask(List<Task> tasks)
+    {
+        ListTasks(tasks);
+        string message = "Digite o número da tarefa que deseja concluir: ";
+        int task = CaptureTaskNumber(message, tasks);
+        tasks[task].Done = true;
+        Console.WriteLine("Tarefa concluída.");
+        Console.WriteLine();
+        return;
+    }
+
+    private static void RemoveTask(List<Task> tasks)
+    {
+        ListTasks(tasks);
+        string message = "Digite o número da tarefa que deseja remover: ";
+        int task = CaptureTaskNumber(message, tasks);
+        tasks.Remove(tasks[task]);
+        Console.WriteLine("Tarefa removida.");
+        Console.WriteLine();
+        return;
     }
 
     public static void Run()
@@ -95,7 +143,16 @@ class ToDoList
             if (option == 2)
             {
                 ListTasks(taskList);
-                Console.WriteLine();
+            }
+
+            if (option == 3)
+            {
+                DoneTask(taskList);
+            }
+
+            if (option == 4)
+            {
+                RemoveTask(taskList);
             }
         }
     }
