@@ -10,6 +10,7 @@ class ToDoList
         Console.WriteLine("2. Listar tarefas");
         Console.WriteLine("3. Concluir tarefa");
         Console.WriteLine("4. Remover tarefa");
+        Console.WriteLine("5. Mostrar Estatísticas");
         Console.WriteLine("0. Sair");
         Console.WriteLine();
         Console.Write("Escolha uma opção: ");
@@ -25,7 +26,7 @@ class ToDoList
             bool parsed = int.TryParse(handleInputOption, out int parsedOption);
 
             if (parsed && parsedOption == 0) break;
-            if (parsed && parsedOption >= 1 && parsedOption <= 4)
+            if (parsed && parsedOption >= 1 && parsedOption <= 5)
             {
                 option = parsedOption;
                 break;
@@ -156,6 +157,30 @@ class ToDoList
         return;
     }
 
+    private static void ShowStatistics(List<Task> tasks)
+    {
+        int countTaskDone = 0;
+        int countTaskPending = 0;
+
+        foreach (Task task in tasks)
+        {
+            if (task.Done)
+            {
+                countTaskDone += 1;
+            }
+            else
+            {
+                countTaskPending += 1;
+            }
+        }
+
+        Console.WriteLine("=== Relatório de Tarefas ===");
+        Console.WriteLine($"Total: {tasks.Count}");
+        Console.WriteLine($"Conclúidas: {countTaskDone}");
+        Console.WriteLine($"Pendentes: {countTaskPending}");
+        Console.WriteLine();
+    }
+
     public static void Run()
     {
         List<Task> taskList = new List<Task>();
@@ -186,6 +211,11 @@ class ToDoList
             if (option == 4)
             {
                 RemoveTask(taskList);
+            }
+
+            if (option == 5)
+            {
+                ShowStatistics(taskList);
             }
         }
     }
