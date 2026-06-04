@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 ToDoList.Run();
 
 class ToDoList
@@ -13,7 +16,6 @@ class ToDoList
         Console.WriteLine("5. Mostrar Estatísticas");
         Console.WriteLine("0. Sair");
         Console.WriteLine();
-        Console.Write("Escolha uma opção: ");
     }
 
     private static int SelectOption()
@@ -22,6 +24,7 @@ class ToDoList
         int option = 0;
         while (true)
         {
+            Console.Write("Escolha uma opção: ");
             string? handleInputOption = Console.ReadLine();
             bool parsed = int.TryParse(handleInputOption, out int parsedOption);
 
@@ -181,9 +184,33 @@ class ToDoList
         Console.WriteLine();
     }
 
+    private static void SaveTasksFile(List<Task> tasks)
+    {
+        string json = JsonSerializer.Serialize(tasks, AppJsonContext.Default.ListTask);
+        File.WriteAllText("tasks.json", json);
+    }
+
+    private static List<Task> ReadTasksFile()
+    {
+        if (!File.Exists("tasks.json"))
+        {
+            return new List<Task>();
+        }
+
+        string json = File.ReadAllText("tasks.json");
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return new List<Task>();
+        }
+
+        return JsonSerializer.Deserialize(json, AppJsonContext.Default.ListTask) ?? new List<Task>();
+    }
+
     public static void Run()
     {
-        List<Task> taskList = new List<Task>();
+        List<Task> taskList = ReadTasksFile();
+        if (taskList.Count > 0) Console.WriteLine("Suas tarefas foram carregadas.");
 
         while (true)
         {
@@ -194,6 +221,7 @@ class ToDoList
             {
                 Task newTask = CreateTask();
                 taskList.Add(newTask);
+                SaveTasksFile(taskList);
                 Console.WriteLine($"Tarefa adicionada com sucesso.");
                 Console.WriteLine();
             }
@@ -206,11 +234,13 @@ class ToDoList
             if (option == 3)
             {
                 DoneTask(taskList);
+                SaveTasksFile(taskList);
             }
 
             if (option == 4)
             {
                 RemoveTask(taskList);
+                SaveTasksFile(taskList);
             }
 
             if (option == 5)
@@ -226,6 +256,12 @@ class Task
     public required string Title { get; set; }
     public bool Done { get; set; } = false;
     public required Priority Priority { get; set; }
+}
+
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(List<Task>))]
+internal partial class AppJsonContext : JsonSerializerContext
+{
 }
 
 enum Priority
