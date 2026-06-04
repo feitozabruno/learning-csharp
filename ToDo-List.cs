@@ -36,10 +36,60 @@ class ToDoList
         return option;
     }
 
-    private static Task CreateTask(string title)
+    private static Priority SelectPriority()
     {
-        Task newTask = new Task { Title = title };
-        return newTask;
+        int priority;
+
+        while (true)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Selecione a prioridade:");
+            Console.WriteLine("1 - Critica");
+            Console.WriteLine("2 - Alta");
+            Console.WriteLine("3 - Normal");
+            Console.WriteLine("4 - Baixa");
+            Console.Write("Escolha uma opção: ");
+
+            string? handleInputPriority = Console.ReadLine();
+            bool parsed = int.TryParse(handleInputPriority, out int parsedPriority);
+
+            if (parsed && parsedPriority >= 1 && parsedPriority <= 4)
+            {
+                priority = parsedPriority;
+                break;
+            }
+
+            Console.WriteLine("Prioridade inválida, tente novamente..");
+        }
+
+        if (priority == 1) return Priority.Critica;
+        if (priority == 2) return Priority.Alta;
+        if (priority == 3) return Priority.Normal;
+        if (priority == 4) return Priority.Baixa;
+        return Priority.Normal;
+    }
+
+    private static Task CreateTask()
+    {
+        string validTitle;
+
+        while (true)
+        {
+            Console.Write("Digite o título da tarefa: ");
+            string? title = Console.ReadLine();
+            bool validateTitle = string.IsNullOrWhiteSpace(title);
+
+            if (!validateTitle)
+            {
+                validTitle = title!;
+                break;
+            }
+
+            Console.WriteLine("Título inválido, tente novamente..");
+        }
+
+        Priority priority = SelectPriority();
+        return new Task { Title = validTitle, Priority = priority };
     }
 
     private static void ListTasks(List<Task> tasks)
@@ -53,7 +103,7 @@ class ToDoList
         for (int i = 0; i < tasks.Count; i++)
         {
             string personalDone = tasks[i].Done ? "X" : " ";
-            Console.WriteLine($"{i + 1} - [{personalDone}] {tasks[i].Title}");
+            Console.WriteLine($"{i + 1} - [{personalDone}] {tasks[i].Title} [{tasks[i].Priority}]");
         }
 
         Console.WriteLine();
@@ -117,24 +167,7 @@ class ToDoList
 
             if (option == 1)
             {
-                string validTask;
-
-                while (true)
-                {
-                    Console.Write("Digite o título da tarefa: ");
-                    string? task = Console.ReadLine();
-                    bool validateTask = string.IsNullOrWhiteSpace(task);
-
-                    if (!validateTask)
-                    {
-                        validTask = task!;
-                        break;
-                    }
-
-                    Console.WriteLine("Título inválido, tente novamente..");
-                }
-
-                Task newTask = CreateTask(validTask);
+                Task newTask = CreateTask();
                 taskList.Add(newTask);
                 Console.WriteLine($"Tarefa adicionada com sucesso.");
                 Console.WriteLine();
@@ -162,4 +195,13 @@ class Task
 {
     public required string Title { get; set; }
     public bool Done { get; set; } = false;
+    public required Priority Priority { get; set; }
+}
+
+enum Priority
+{
+    Critica,
+    Alta,
+    Normal,
+    Baixa
 }
