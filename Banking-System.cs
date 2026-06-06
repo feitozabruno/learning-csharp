@@ -1,6 +1,5 @@
 using System.Globalization;
-Banking banking = new Banking();
-banking.Run();
+Banking.Run();
 
 class Banking
 {
@@ -41,56 +40,13 @@ class Banking
         return option;
     }
 
-    private static void ListAccounts(List<Account> accounts)
-    {
-        if (accounts.Count == 0)
-        {
-            Console.WriteLine("Nenhuma conta cadastrada.");
-            return;
-        }
-
-        foreach (Account account in accounts)
-        {
-            Console.WriteLine($"Conta: {account.Number}");
-            Console.WriteLine($"Titular: {account.Holder}");
-            Console.WriteLine($"Saldo: {account.Balance.ToString("C", new CultureInfo("pt-BR"))}");
-            Console.WriteLine();
-        }
-    }
-
-    public static Account CreateAccount(string name)
-    {
-        return new Account { Holder = name };
-    }
-
-    private static bool ValidateAccountNumber(int number, List<Account> accounts)
-    {
-        foreach (Account account in accounts)
-        {
-            if (account.Number == number)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static void Deposit(int number, decimal value)
-    {
-        // PRECISO ADICIONAR A LISTA DE CONTAS NO CONTEXTO DO PROGRAMA
-        // TER QUE INJETAR EM TODOS OS METODOS ESTÁ FICANDO INVIAVEL!
-
-        Console.WriteLine("Nenhuma conta com esse número foi encontrada");
-    }
-
-    private static decimal CaptureDepositValue(string instruction)
+    private static decimal CaptureDepositValue()
     {
         decimal validValue;
 
         while (true)
         {
-            Console.Write(instruction);
+            Console.Write("Digite o valor: ");
             string? handleInputValue = Console.ReadLine();
             bool parsed = decimal.TryParse(handleInputValue, out decimal value);
 
@@ -105,6 +61,20 @@ class Banking
         }
 
         return validValue;
+    }
+
+    private static string CaptureHolderName()
+    {
+        while (true)
+        {
+            Console.Write("Nome do titular: ");
+            string? holder = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(holder))
+            {
+                return holder;
+            }
+            Console.WriteLine("Nome inválido, tente novamente..");
+        }
     }
 
     private static int CaptureAccountNumber()
@@ -130,10 +100,9 @@ class Banking
         return validAccountNumber;
     }
 
-    public void Run()
+    public static void Run()
     {
-        List<Account> accounts = new List<Account>();
-
+        Bank bank = new Bank();
         while (true)
         {
             int option = SelectMenuOption();
@@ -142,34 +111,104 @@ class Banking
 
             if (option == 1)
             {
-                while (true)
-                {
-                    Console.Write("Nome do titular: ");
-                    string? holder = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(holder))
-                    {
-                        Account newAccount = new Account { Holder = holder };
-                        accounts.Add(newAccount);
-                        Console.WriteLine($"Conta número: {newAccount.Number} criada com sucesso.");
-                        Console.WriteLine();
-                        break;
-                    }
-                    Console.WriteLine("Nome inválido, tente novamente..");
-                }
+                string holder = CaptureHolderName();
+                bank.CreateAccount(holder);
             }
 
             if (option == 2)
             {
-                ListAccounts(accounts);
+                bank.ListAccounts();
+            }
+
+            if (option == 3)
+            {
+                int accountNumber = CaptureAccountNumber();
+                bank.CheckAccountBalance(accountNumber);
             }
 
             if (option == 4)
             {
                 int accountNumber = CaptureAccountNumber();
-                decimal value = CaptureDepositValue("Digite o valor: ");
-                Deposit(accountNumber, value);
+                decimal value = CaptureDepositValue();
+                bank.Deposit(accountNumber, value);
             }
         }
+    }
+}
+
+class Bank
+{
+    List<Account> Accounts = new List<Account>();
+
+    public Account CreateAccount(string name)
+    {
+        Account newAccount = new Account { Holder = name };
+        Accounts.Add(newAccount);
+        Console.WriteLine($"Conta número: {newAccount.Number} criada com sucesso.");
+        Console.WriteLine();
+        return newAccount;
+    }
+
+    public void ListAccounts()
+    {
+        if (Accounts.Count == 0)
+        {
+            Console.WriteLine("Nenhuma conta cadastrada.");
+            return;
+        }
+
+        foreach (Account account in Accounts)
+        {
+            Console.WriteLine($"Conta: {account.Number}");
+            Console.WriteLine($"Titular: {account.Holder}");
+            Console.WriteLine($"Saldo: {account.Balance.ToString("C", new CultureInfo("pt-BR"))}");
+            Console.WriteLine();
+        }
+    }
+
+    private Account ValidateAccountNumber(int number)
+    {
+        foreach (Account account in Accounts)
+        {
+            if (account.Number == number)
+            {
+                return account;
+            }
+        }
+
+        return null;
+    }
+
+    public void CheckAccountBalance(int number)
+    {
+        Account validAccount = ValidateAccountNumber(number);
+
+        if (validAccount == null)
+        {
+            Console.WriteLine("Nenhuma conta com esse número foi encontrada");
+            return;
+        }
+
+        Console.WriteLine($"Conta: {validAccount.Number}");
+        Console.WriteLine($"Titular: {validAccount.Holder}");
+        Console.WriteLine($"Saldo: {validAccount.Balance.ToString("C", new CultureInfo("pt-BR"))}");
+        Console.WriteLine();
+        return;
+    }
+
+    public void Deposit(int number, decimal value)
+    {
+        Account validAccount = ValidateAccountNumber(number);
+
+        if (validAccount == null)
+        {
+            Console.WriteLine("Nenhuma conta com esse número foi encontrada");
+            return;
+        }
+
+        validAccount.Balance += value;
+        Console.WriteLine("Deposito realizado.");
+        return;
     }
 }
 
