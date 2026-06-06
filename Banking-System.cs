@@ -1,4 +1,6 @@
-Banking.Run();
+using System.Globalization;
+Banking banking = new Banking();
+banking.Run();
 
 class Banking
 {
@@ -14,7 +16,7 @@ class Banking
         Console.WriteLine("0 - Sair");
     }
 
-    private static int SelectOption()
+    private static int SelectMenuOption()
     {
         ShowMenu();
         int option = 0;
@@ -23,6 +25,7 @@ class Banking
         {
             Console.Write("Escolha uma opção: ");
             string? handleInputOption = Console.ReadLine();
+            Console.WriteLine();
             bool parsed = int.TryParse(handleInputOption, out int parsedOption);
 
             if (parsed && parsedOption == 0) break;
@@ -38,37 +41,133 @@ class Banking
         return option;
     }
 
-    private static Account CreateAccount(string cpf, string name)
+    private static void ListAccounts(List<Account> accounts)
     {
-        return new Account { Cpf = cpf, Holder = name };
+        if (accounts.Count == 0)
+        {
+            Console.WriteLine("Nenhuma conta cadastrada.");
+            return;
+        }
+
+        foreach (Account account in accounts)
+        {
+            Console.WriteLine($"Conta: {account.Number}");
+            Console.WriteLine($"Titular: {account.Holder}");
+            Console.WriteLine($"Saldo: {account.Balance.ToString("C", new CultureInfo("pt-BR"))}");
+            Console.WriteLine();
+        }
     }
 
-    public static void Run()
+    public static Account CreateAccount(string name)
     {
-        int option = SelectOption();
+        return new Account { Holder = name };
+    }
 
-        if (option == 1)
+    private static bool ValidateAccountNumber(int number, List<Account> accounts)
+    {
+        foreach (Account account in accounts)
         {
-            Console.Write("Digite o seu cpf: ");
-            string? cpf = Console.ReadLine();
-
-            Console.WriteLine();
-
-            Console.Write("Digite o seu nome completo: ");
-            string? fullName = Console.ReadLine();
-
-            Console.WriteLine();
-
-            if (!string.IsNullOrWhiteSpace(cpf) && !string.IsNullOrWhiteSpace(fullName))
+            if (account.Number == number)
             {
-                Account newAccount = CreateAccount(cpf, fullName);
-                Console.WriteLine("Conta criada com sucesso!");
-                Console.WriteLine($"Número: {newAccount.Cpf}");
-                Console.WriteLine($"Titular: {newAccount.Holder}");
+                return true;
             }
-            else
+        }
+
+        return false;
+    }
+
+    public static void Deposit(int number, decimal value)
+    {
+        // PRECISO ADICIONAR A LISTA DE CONTAS NO CONTEXTO DO PROGRAMA
+        // TER QUE INJETAR EM TODOS OS METODOS ESTÁ FICANDO INVIAVEL!
+
+        Console.WriteLine("Nenhuma conta com esse número foi encontrada");
+    }
+
+    private static decimal CaptureDepositValue(string instruction)
+    {
+        decimal validValue;
+
+        while (true)
+        {
+            Console.Write(instruction);
+            string? handleInputValue = Console.ReadLine();
+            bool parsed = decimal.TryParse(handleInputValue, out decimal value);
+
+            if (parsed)
             {
-                Console.WriteLine("Nome ou CPF Inválidos");
+                validValue = value;
+                break;
+            }
+
+            Console.WriteLine("Valor inválido, tente novamente..");
+            Console.WriteLine();
+        }
+
+        return validValue;
+    }
+
+    private static int CaptureAccountNumber()
+    {
+        int validAccountNumber;
+
+        while (true)
+        {
+            Console.Write("Digite o número da conta: ");
+            string? handleInputValue = Console.ReadLine();
+            bool parsed = int.TryParse(handleInputValue, out int number);
+
+            if (parsed)
+            {
+                validAccountNumber = number;
+                break;
+            }
+
+            Console.WriteLine("Número inválido, tente novamente..");
+            Console.WriteLine();
+        }
+
+        return validAccountNumber;
+    }
+
+    public void Run()
+    {
+        List<Account> accounts = new List<Account>();
+
+        while (true)
+        {
+            int option = SelectMenuOption();
+
+            if (option == 0) break;
+
+            if (option == 1)
+            {
+                while (true)
+                {
+                    Console.Write("Nome do titular: ");
+                    string? holder = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(holder))
+                    {
+                        Account newAccount = new Account { Holder = holder };
+                        accounts.Add(newAccount);
+                        Console.WriteLine($"Conta número: {newAccount.Number} criada com sucesso.");
+                        Console.WriteLine();
+                        break;
+                    }
+                    Console.WriteLine("Nome inválido, tente novamente..");
+                }
+            }
+
+            if (option == 2)
+            {
+                ListAccounts(accounts);
+            }
+
+            if (option == 4)
+            {
+                int accountNumber = CaptureAccountNumber();
+                decimal value = CaptureDepositValue("Digite o valor: ");
+                Deposit(accountNumber, value);
             }
         }
     }
@@ -76,7 +175,14 @@ class Banking
 
 class Account
 {
-    public required string Cpf { get; set; }
+    public int Number { get; private set; }
     public required string Holder { get; set; }
-    public decimal Balance { get; set; } = 0;
+    public decimal Balance { get; set; } = 0m;
+
+    static int InitialNumber = 1;
+
+    public Account()
+    {
+        Number = InitialNumber++;
+    }
 }
