@@ -40,7 +40,7 @@ class Banking
         return option;
     }
 
-    private static decimal CaptureDepositValue()
+    private static decimal CaptureOperationValue()
     {
         decimal validValue;
 
@@ -123,14 +123,41 @@ class Banking
             if (option == 3)
             {
                 int accountNumber = CaptureAccountNumber();
-                bank.CheckAccountBalance(accountNumber);
+                Account? account = bank.FindAccount(accountNumber);
+
+                if (account != null)
+                {
+                    Console.WriteLine($"Conta: {account.Number}");
+                    Console.WriteLine($"Titular: {account.Holder}");
+                    Console.WriteLine($"Saldo: {account.Balance.ToString("C", new CultureInfo("pt-BR"))}");
+                    Console.WriteLine();
+                }
             }
 
             if (option == 4)
             {
                 int accountNumber = CaptureAccountNumber();
-                decimal value = CaptureDepositValue();
-                bank.Deposit(accountNumber, value);
+                decimal value = CaptureOperationValue();
+                Account? account = bank.FindAccount(accountNumber);
+                account?.Deposit(value);
+            }
+
+            if (option == 5)
+            {
+                int accountNumber = CaptureAccountNumber();
+                decimal value = CaptureOperationValue();
+                Account? account = bank.FindAccount(accountNumber);
+                account?.Withdrawal(value);
+            }
+
+            if (option == 6)
+            {
+                Console.WriteLine("Conta de origem");
+                int accountNumber1 = CaptureAccountNumber();
+                Console.WriteLine("Conta de destino");
+                int accountNumber2 = CaptureAccountNumber();
+                decimal value = CaptureOperationValue();
+                bank.MoneyTransfer(accountNumber1, accountNumber2, value);
             }
         }
     }
@@ -138,12 +165,12 @@ class Banking
 
 class Bank
 {
-    List<Account> Accounts = new List<Account>();
+    private readonly List<Account> accounts = new List<Account>();
 
     public Account CreateAccount(string name)
     {
         Account newAccount = new Account { Holder = name };
-        Accounts.Add(newAccount);
+        accounts.Add(newAccount);
         Console.WriteLine($"Conta número: {newAccount.Number} criada com sucesso.");
         Console.WriteLine();
         return newAccount;
@@ -151,13 +178,13 @@ class Bank
 
     public void ListAccounts()
     {
-        if (Accounts.Count == 0)
+        if (accounts.Count == 0)
         {
             Console.WriteLine("Nenhuma conta cadastrada.");
             return;
         }
 
-        foreach (Account account in Accounts)
+        foreach (Account account in accounts)
         {
             Console.WriteLine($"Conta: {account.Number}");
             Console.WriteLine($"Titular: {account.Holder}");
@@ -166,9 +193,9 @@ class Bank
         }
     }
 
-    private Account ValidateAccountNumber(int number)
+    public Account? FindAccount(int number)
     {
-        foreach (Account account in Accounts)
+        foreach (Account account in accounts)
         {
             if (account.Number == number)
             {
@@ -176,52 +203,69 @@ class Bank
             }
         }
 
+        Console.WriteLine("Nenhuma conta com esse número foi encontrada");
         return null;
     }
 
-    public void CheckAccountBalance(int number)
+    public void MoneyTransfer(int origin, int destination, decimal value)
     {
-        Account validAccount = ValidateAccountNumber(number);
-
-        if (validAccount == null)
+        if (value <= 0)
         {
-            Console.WriteLine("Nenhuma conta com esse número foi encontrada");
+            Console.WriteLine("Valor de transferência inválido.");
             return;
         }
 
-        Console.WriteLine($"Conta: {validAccount.Number}");
-        Console.WriteLine($"Titular: {validAccount.Holder}");
-        Console.WriteLine($"Saldo: {validAccount.Balance.ToString("C", new CultureInfo("pt-BR"))}");
-        Console.WriteLine();
-        return;
-    }
+        Account? accountOrigin = FindAccount(origin);
+        Account? accountDestination = FindAccount(destination);
 
-    public void Deposit(int number, decimal value)
-    {
-        Account validAccount = ValidateAccountNumber(number);
-
-        if (validAccount == null)
+        if (accountOrigin == null || accountDestination == null)
         {
-            Console.WriteLine("Nenhuma conta com esse número foi encontrada");
+            Console.WriteLine("A conta de origem ou de destino é inválida");
             return;
         }
 
-        validAccount.Balance += value;
-        Console.WriteLine("Deposito realizado.");
+        accountOrigin?.Withdrawal(value);
+        accountDestination?.Deposit(value);
+        Console.WriteLine("Transferência finalizada");
         return;
     }
 }
 
-class Account
+class Account()
 {
-    public int Number { get; private set; }
-    public required string Holder { get; set; }
+    private static int InitialNumber = 1;
+    public int Number { get; private set; } = InitialNumber++;
+    public required string Holder { get; init; }
     public decimal Balance { get; set; } = 0m;
 
-    static int InitialNumber = 1;
-
-    public Account()
+    public void Deposit(decimal value)
     {
-        Number = InitialNumber++;
+        if (value <= 0)
+        {
+            Console.WriteLine("Valor de depósito inválido.");
+            return;
+        }
+
+        Balance += value;
+        Console.WriteLine("Depósito realizado.");
+    }
+
+    public void Withdrawal(decimal value)
+    {
+        if (value <= 0)
+        {
+            Console.WriteLine("Valor de saque inválido.");
+            return;
+        }
+
+        if (Balance >= value)
+        {
+            Balance -= value;
+            Console.WriteLine("Saque realizado.");
+            return;
+        }
+
+        Console.WriteLine("Saldo insuficiente.");
+        return;
     }
 }
