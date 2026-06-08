@@ -12,6 +12,7 @@ class Banking
         Console.WriteLine("4 - Depositar");
         Console.WriteLine("5 - Sacar");
         Console.WriteLine("6 - Transferir");
+        Console.WriteLine("7 - Histórico");
         Console.WriteLine("0 - Sair");
     }
 
@@ -28,7 +29,7 @@ class Banking
             bool parsed = int.TryParse(handleInputOption, out int parsedOption);
 
             if (parsed && parsedOption == 0) break;
-            if (parsed && parsedOption >= 1 && parsedOption <= 6)
+            if (parsed && parsedOption >= 1 && parsedOption <= 7)
             {
                 option = parsedOption;
                 break;
@@ -154,10 +155,26 @@ class Banking
             {
                 Console.WriteLine("Conta de origem");
                 int accountNumber1 = CaptureAccountNumber();
+
                 Console.WriteLine("Conta de destino");
                 int accountNumber2 = CaptureAccountNumber();
+
                 decimal value = CaptureOperationValue();
-                bank.MoneyTransfer(accountNumber1, accountNumber2, value);
+
+                Account? accountOrigin = bank.FindAccount(accountNumber1);
+                Account? accountDestination = bank.FindAccount(accountNumber2);
+
+                if (accountOrigin != null & accountDestination != null)
+                {
+                    accountOrigin?.Transfer(accountDestination!, value);
+                }
+            }
+
+            if (option == 7)
+            {
+                int accountNumber = CaptureAccountNumber();
+                Account? account = bank.FindAccount(accountNumber);
+                account?.Transactions();
             }
         }
     }
@@ -206,33 +223,11 @@ class Bank
         Console.WriteLine("Nenhuma conta com esse número foi encontrada");
         return null;
     }
-
-    public void MoneyTransfer(int origin, int destination, decimal value)
-    {
-        if (value <= 0)
-        {
-            Console.WriteLine("Valor de transferência inválido.");
-            return;
-        }
-
-        Account? accountOrigin = FindAccount(origin);
-        Account? accountDestination = FindAccount(destination);
-
-        if (accountOrigin == null || accountDestination == null)
-        {
-            Console.WriteLine("A conta de origem ou de destino é inválida");
-            return;
-        }
-
-        accountOrigin?.Withdrawal(value);
-        accountDestination?.Deposit(value);
-        Console.WriteLine("Transferência finalizada");
-        return;
-    }
 }
 
 class Account()
 {
+    private readonly List<Transaction> transactions = new List<Transaction>();
     private static int InitialNumber = 1;
     public int Number { get; private set; } = InitialNumber++;
     public required string Holder { get; init; }
@@ -247,6 +242,14 @@ class Account()
         }
 
         Balance += value;
+        Transaction transaction = new Transaction
+        {
+            AccountNumber = Number,
+            Operation = "Depósito",
+            Value = value
+        };
+
+        transactions.Add(transaction);
         Console.WriteLine("Depósito realizado.");
     }
 
@@ -261,6 +264,13 @@ class Account()
         if (Balance >= value)
         {
             Balance -= value;
+            Transaction transaction = new Transaction
+            {
+                AccountNumber = Number,
+                Operation = "Saque",
+                Value = value
+            };
+            transactions.Add(transaction);
             Console.WriteLine("Saque realizado.");
             return;
         }
@@ -268,4 +278,70 @@ class Account()
         Console.WriteLine("Saldo insuficiente.");
         return;
     }
+
+    public void Transfer(Account destination, decimal value)
+    {
+        if (value <= 0)
+        {
+            Console.WriteLine("Valor de transferência inválido.");
+            return;
+        }
+
+        Balance -= value;
+        Transaction transaction1 = new Transaction
+        {
+            AccountNumber = Number,
+            Operation = "Transferência enviada",
+            Value = value
+        };
+        transactions.Add(transaction1);
+        destination.Balance += value;
+        Transaction transaction2 = new Transaction
+        {
+            AccountNumber = Number,
+            Operation = "Transferência recebida",
+            Value = value
+        };
+        destination.transactions.Add(transaction2);
+        Console.WriteLine("Transferência realizada.");
+        return;
+    }
+
+    public void Transactions()
+    {
+        if (transactions.Count == 0)
+        {
+            Console.WriteLine("Nenhuma transação encontrada.");
+            return;
+        }
+
+        foreach (Transaction transaction in transactions)
+        {
+            if (transaction.Operation == "Depósito")
+            {
+                Console.WriteLine($"+ {transaction.Value.ToString("C", new CultureInfo("pt-BR"))} Depósito");
+            }
+            if (transaction.Operation == "Saque")
+            {
+                Console.WriteLine($"- {transaction.Value.ToString("C", new CultureInfo("pt-BR"))} Saque");
+            }
+            if (transaction.Operation == "Transferência enviada")
+            {
+                Console.WriteLine($"- {transaction.Value.ToString("C", new CultureInfo("pt-BR"))} Transferência enviada");
+            }
+            if (transaction.Operation == "Transferência recebida")
+            {
+                Console.WriteLine($"+ {transaction.Value.ToString("C", new CultureInfo("pt-BR"))} Transferência recebida");
+            }
+        }
+    }
+}
+
+class Transaction()
+{
+    private static int initialId = 1;
+    public int Id { get; private set; } = initialId++;
+    public int AccountNumber { get; set; }
+    public required string Operation { get; set; }
+    public decimal Value { get; set; }
 }
