@@ -101,6 +101,18 @@ class Banking
         return validAccountNumber;
     }
 
+    private enum Menu
+    {
+        CreateAccount = 1,
+        ListAccounts = 2,
+        CheckAccountBalance = 3,
+        Deposit = 4,
+        Withdrawal = 5,
+        Transfer = 6,
+        Transactions = 7,
+        Exit = 0
+    }
+
     public static void Run()
     {
         Bank bank = new Bank();
@@ -108,34 +120,27 @@ class Banking
         {
             int option = SelectMenuOption();
 
-            if (option == 0) break;
+            if (option == (int)Menu.Exit) break;
 
-            if (option == 1)
+            if (option == (int)Menu.CreateAccount)
             {
                 string holder = CaptureHolderName();
                 bank.CreateAccount(holder);
             }
 
-            if (option == 2)
+            if (option == (int)Menu.ListAccounts)
             {
                 bank.ListAccounts();
             }
 
-            if (option == 3)
+            if (option == (int)Menu.CheckAccountBalance)
             {
                 int accountNumber = CaptureAccountNumber();
                 Account? account = bank.FindAccount(accountNumber);
-
-                if (account != null)
-                {
-                    Console.WriteLine($"Conta: {account.Number}");
-                    Console.WriteLine($"Titular: {account.Holder}");
-                    Console.WriteLine($"Saldo: {account.Balance.ToString("C", new CultureInfo("pt-BR"))}");
-                    Console.WriteLine();
-                }
+                account?.CheckBalance();
             }
 
-            if (option == 4)
+            if (option == (int)Menu.Deposit)
             {
                 int accountNumber = CaptureAccountNumber();
                 decimal value = CaptureOperationValue();
@@ -143,7 +148,7 @@ class Banking
                 account?.Deposit(value);
             }
 
-            if (option == 5)
+            if (option == (int)Menu.Withdrawal)
             {
                 int accountNumber = CaptureAccountNumber();
                 decimal value = CaptureOperationValue();
@@ -151,26 +156,21 @@ class Banking
                 account?.Withdrawal(value);
             }
 
-            if (option == 6)
+            if (option == (int)Menu.Transfer)
             {
-                Console.WriteLine("Conta de origem");
-                int accountNumber1 = CaptureAccountNumber();
+                Console.WriteLine("Conta de origem:");
+                int accountOriginNumber = CaptureAccountNumber();
 
-                Console.WriteLine("Conta de destino");
-                int accountNumber2 = CaptureAccountNumber();
+                Console.WriteLine("Conta de destino:");
+                int accountDestinationNumber = CaptureAccountNumber();
 
                 decimal value = CaptureOperationValue();
-
-                Account? accountOrigin = bank.FindAccount(accountNumber1);
-                Account? accountDestination = bank.FindAccount(accountNumber2);
-
-                if (accountOrigin != null & accountDestination != null)
-                {
-                    accountOrigin?.Transfer(accountDestination!, value);
-                }
+                Account? accountOrigin = bank.FindAccount(accountOriginNumber);
+                Account? accountDestination = bank.FindAccount(accountDestinationNumber);
+                accountOrigin?.Transfer(accountDestination, value);
             }
 
-            if (option == 7)
+            if (option == (int)Menu.Transactions)
             {
                 int accountNumber = CaptureAccountNumber();
                 Account? account = bank.FindAccount(accountNumber);
@@ -188,7 +188,7 @@ class Bank
     {
         Account newAccount = new Account { Holder = name };
         accounts.Add(newAccount);
-        Console.WriteLine($"Conta número: {newAccount.Number} criada com sucesso.");
+        Console.WriteLine($"Conta número: {newAccount.Number} foi criada com sucesso.");
         Console.WriteLine();
         return newAccount;
     }
@@ -233,6 +233,14 @@ class Account()
     public required string Holder { get; init; }
     public decimal Balance { get; set; } = 0m;
 
+    public void CheckBalance()
+    {
+        Console.WriteLine($"Conta: {Number}");
+        Console.WriteLine($"Titular: {Holder}");
+        Console.WriteLine($"Saldo: {Balance.ToString("C", new CultureInfo("pt-BR"))}");
+        Console.WriteLine();
+    }
+
     public void Deposit(decimal value)
     {
         if (value <= 0)
@@ -241,14 +249,14 @@ class Account()
             return;
         }
 
-        Balance += value;
         Transaction transaction = new Transaction
         {
             AccountNumber = Number,
-            Operation = "Depósito",
+            Type = TransactionType.Deposit,
             Value = value
         };
 
+        Balance += value;
         transactions.Add(transaction);
         Console.WriteLine("Depósito realizado.");
     }
@@ -261,25 +269,26 @@ class Account()
             return;
         }
 
-        if (Balance >= value)
+        if (Balance < value)
         {
-            Balance -= value;
-            Transaction transaction = new Transaction
-            {
-                AccountNumber = Number,
-                Operation = "Saque",
-                Value = value
-            };
-            transactions.Add(transaction);
-            Console.WriteLine("Saque realizado.");
+            Console.WriteLine("Saldo insuficiente.");
             return;
         }
 
-        Console.WriteLine("Saldo insuficiente.");
+        Transaction transaction = new Transaction
+        {
+            AccountNumber = Number,
+            Type = TransactionType.Withdrawal,
+            Value = value
+        };
+
+        Balance -= value;
+        transactions.Add(transaction);
+        Console.WriteLine("Saque realizado.");
         return;
     }
 
-    public void Transfer(Account destination, decimal value)
+    public void Transfer(Account? accountDestination, decimal value)
     {
         if (value <= 0)
         {
@@ -287,24 +296,33 @@ class Account()
             return;
         }
 
+        Transaction transactionOrigin = new Transaction
+        {
+            AccountNumber = Number,
+            Type = TransactionType.TransferSent,
+            Value = value
+        };
+
+        Transaction transactionDestination = new Transaction
+        {
+            AccountNumber = accountDestination!.Number,
+            Type = TransactionType.TransferReceived,
+            Value = value
+        };
+
         Balance -= value;
-        Transaction transaction1 = new Transaction
-        {
-            AccountNumber = Number,
-            Operation = "Transferência enviada",
-            Value = value
-        };
-        transactions.Add(transaction1);
-        destination.Balance += value;
-        Transaction transaction2 = new Transaction
-        {
-            AccountNumber = Number,
-            Operation = "Transferência recebida",
-            Value = value
-        };
-        destination.transactions.Add(transaction2);
+        transactions.Add(transactionOrigin);
+
+        accountDestination.Balance += value;
+        accountDestination.transactions.Add(transactionDestination);
+
         Console.WriteLine("Transferência realizada.");
         return;
+    }
+
+    private static string FormatCurrency(decimal money)
+    {
+        return money.ToString("C", new CultureInfo("pt-BR"));
     }
 
     public void Transactions()
@@ -317,21 +335,21 @@ class Account()
 
         foreach (Transaction transaction in transactions)
         {
-            if (transaction.Operation == "Depósito")
+            if (transaction.Type == TransactionType.Deposit)
             {
-                Console.WriteLine($"+ {transaction.Value.ToString("C", new CultureInfo("pt-BR"))} Depósito");
+                Console.WriteLine($"+ {FormatCurrency(transaction.Value)} Depósito");
             }
-            if (transaction.Operation == "Saque")
+            if (transaction.Type == TransactionType.Withdrawal)
             {
-                Console.WriteLine($"- {transaction.Value.ToString("C", new CultureInfo("pt-BR"))} Saque");
+                Console.WriteLine($"- {FormatCurrency(transaction.Value)} Saque");
             }
-            if (transaction.Operation == "Transferência enviada")
+            if (transaction.Type == TransactionType.TransferSent)
             {
-                Console.WriteLine($"- {transaction.Value.ToString("C", new CultureInfo("pt-BR"))} Transferência enviada");
+                Console.WriteLine($"- {FormatCurrency(transaction.Value)} Transferência enviada");
             }
-            if (transaction.Operation == "Transferência recebida")
+            if (transaction.Type == TransactionType.TransferReceived)
             {
-                Console.WriteLine($"+ {transaction.Value.ToString("C", new CultureInfo("pt-BR"))} Transferência recebida");
+                Console.WriteLine($"+ {FormatCurrency(transaction.Value)} Transferência recebida");
             }
         }
     }
@@ -339,9 +357,15 @@ class Account()
 
 class Transaction()
 {
-    private static int initialId = 1;
-    public int Id { get; private set; } = initialId++;
     public int AccountNumber { get; set; }
-    public required string Operation { get; set; }
+    public required TransactionType Type { get; set; }
     public decimal Value { get; set; }
+}
+
+enum TransactionType
+{
+    Deposit,
+    Withdrawal,
+    TransferSent,
+    TransferReceived
 }
