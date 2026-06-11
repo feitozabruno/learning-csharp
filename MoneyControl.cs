@@ -4,13 +4,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-// JÁ TEMOS O SERVIDOR HTTP FUNCIONANDO
-// AGORA VAMOS CRIAR A ROTA PARA RECEBER OS LANÇAMENTOS DE DADOS DO USUÁRIO
-
 MoneyControl.Run();
 
 public record MessageResponse(string Message);
 public record ErrorNotFoundResponse(string Error, int StatusCode);
+public record Summary(decimal Incomes, decimal Outcomes, string Balance);
 
 class MoneyControl
 {
@@ -21,7 +19,7 @@ class MoneyControl
         server.Prefixes.Add("http://127.0.0.1:5000/");
         server.Start();
         Console.WriteLine("Servidor iniciado em http://localhost:5000");
-        List<DataEntry> entries = new List<DataEntry>();
+        List<Transaction> transactions = new List<Transaction>();
 
         while (true)
         {
@@ -32,35 +30,94 @@ class MoneyControl
 
             string route = request.Url!.AbsolutePath;
 
-            if (route == "/input" && request.HttpMethod == "POST")
+            if (route == "/new-transaction" && request.HttpMethod == "POST")
             {
-                string requestBody = ReadJson(request.InputStream);
-                DataEntry parsedBody = JsonSerializer.Deserialize(requestBody, AppJsonContext.Default.DataEntry);
-
-                DataEntry newEntry = new DataEntry
+                try
                 {
-                    Description = parsedBody.Description,
-                    Value = parsedBody.Value,
-                    Type = parsedBody.Type,
-                };
-
-                entries.Add(newEntry);
-
-                // NÃO ESTOU GOSTANDO DO NOME DESSA CLASSE (DataEntry)
-                // PRECISO ACHAR UM NOME MELHOR
-
+                    string requestBody = ReadJson(request.InputStream);
+                    Transaction transaction = JsonSerializer.Deserialize(requestBody, AppJsonContext.Default.Transaction);
+                    transactions.Add(transaction);
+                    SendJson(
+                        response,
+                        new MessageResponse("Dado lançado com sucesso!"),
+                        AppJsonContext.Default.MessageResponse
+                    );
+                }
+                catch
+                {
+                    response.StatusCode = 400;
+                    SendJson(
+                        response,
+                        new ErrorNotFoundResponse("Corpo da requisição inválido", 400),
+                        AppJsonContext.Default.ErrorNotFoundResponse
+                    );
+                }
+            }
+            else if (route == "/transactions" && request.HttpMethod == "GET")
+            {
                 SendJson(
                     response,
-                    new MessageResponse("Dado lançado com sucesso!"),
-                    AppJsonContext.Default.MessageResponse
+                    transactions,
+                    AppJsonContext.Default.ListTransaction
                 );
             }
-            else if (route == "/entries" && request.HttpMethod == "GET")
+            else if (route == "/summary" && request.HttpMethod == "GET")
             {
+                decimal incomes = 0m;
+                decimal outcomes = 0m;
+                decimal balance;
+                foreach (Transaction transaction in transactions)
+                {
+                    if (transaction.Type == "Income")
+                    {
+                        incomes += transaction.Value;
+                    }
+                    if (transaction.Type == "Outcome")
+                    {
+                        outcomes += transaction.Value;
+                    }
+                }
+                balance = incomes - outcomes;
                 SendJson(
                     response,
-                    entries,
-                    AppJsonContext.Default.ListDataEntry
+                    new Summary(incomes, outcomes, balance),
+                    AppJsonContext.Default.Summary
+                );
+            }
+            else if (route == "/incomes" && request.HttpMethod == "GET")
+            {
+                List<Transaction> incomes = new List<Transaction>();
+
+                foreach (Transaction transaction in transactions)
+                {
+                    if (transaction.Type == "Income")
+                    {
+                        incomes.Add(transaction);
+                    }
+                }
+
+                SendJson(
+                    response,
+                    incomes,
+                    AppJsonContext.Default.ListTransaction
+                );
+            }
+            else if (route == "/outcomes" && request.HttpMethod == "GET")
+            {
+                List<Transaction> incomes = new List<Transaction>();
+
+                foreach (Transaction transaction in transactions)
+                {
+                    if (transaction.Type == "Outcome")
+                    {
+                        incomes.Add(transaction);
+                    }
+                }
+
+                SendJson(
+                    response,
+                    incomes,
+                    AppJsonContext.Default.ListTransaction
                 );
             }
             else
@@ -78,8 +135,7 @@ class MoneyControl
     private static string ReadJson(Stream inputStream)
     {
         StreamReader reader = new StreamReader(inputStream);
-        string body = reader.ReadToEnd();
-        return body;
+        return reader.ReadToEnd();
     }
 
     private static void SendJson<T>(HttpListenerResponse response, T data, JsonTypeInfo<T> typeInfo)
@@ -91,19 +147,21 @@ class MoneyControl
         response.OutputStream.Write(buffer);
         response.Close();
     }
+
 }
 
 [JsonSerializable(typeof(MessageResponse))]
 [JsonSerializable(typeof(ErrorNotFoundResponse))]
-[JsonSerializable(typeof(DataEntry))]
-[JsonSerializable(typeof(List<DataEntry>))]
+[JsonSerializable(typeof(Transaction))]
+[JsonSerializable(typeof(List<Transaction>))]
+[JsonSerializable(typeof(Summary))]
 internal partial class AppJsonContext : JsonSerializerContext { }
 
-class DataEntry
+class Transaction
 {
     private static int initialId = 1;
     public int Id { get; set; } = initialId++;
-    public string Description { get; set; }
-    public decimal Value { get; set; }
-    public string Type { get; set; }
+    public required string Description { get; set; }
+    public required decimal Value { get; set; }
+    public required string Type { get; set; }
 }
