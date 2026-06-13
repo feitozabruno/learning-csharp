@@ -7,8 +7,8 @@ using System.Text.Json.Serialization.Metadata;
 MoneyControl.Run();
 
 public record MessageResponse(string Message);
-public record ErrorNotFoundResponse(string Error, int StatusCode);
-public record Summary(decimal Incomes, decimal Outcomes, string Balance);
+public record ErrorResponse(string Error, int StatusCode);
+public record Summary(decimal Incomes, decimal Outcomes, decimal Balance);
 
 class MoneyControl
 {
@@ -29,6 +29,7 @@ class MoneyControl
             Console.WriteLine($"{request.HttpMethod} {request.Url}");
 
             string route = request.Url!.AbsolutePath;
+            string[] segments = route.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
             if (route == "/new-transaction" && request.HttpMethod == "POST")
             {
@@ -44,12 +45,14 @@ class MoneyControl
                     );
                 }
                 catch
+                // catch (Exception error)
                 {
                     response.StatusCode = 400;
                     SendJson(
                         response,
-                        new ErrorNotFoundResponse("Corpo da requisição inválido", 400),
-                        AppJsonContext.Default.ErrorNotFoundResponse
+                        new ErrorResponse("Corpo da requisição inválido", 400),
+                        // new ErrorResponse(error.Message, 400),
+                        AppJsonContext.Default.ErrorResponse
                     );
                 }
             }
@@ -61,18 +64,44 @@ class MoneyControl
                     AppJsonContext.Default.ListTransaction
                 );
             }
-            else if (route == "/summary" && request.HttpMethod == "GET")
+            else if (
+                segments[0] == "transactions"
+                && segments.Length == 2
+                && request.HttpMethod == "GET"
+            )
+            {
+                bool parsed = int.TryParse(segments[1], out int id);
+                Transaction? transactionFounded = transactions.Find(transaction => transaction.Id == id);
+
+                if (transactionFounded is null)
+                {
+                    SendJson(
+                        response,
+                        new MessageResponse($"Nenhuma transacão com id: {id} foi encontrada."),
+                        AppJsonContext.Default.MessageResponse
+                    );
+                }
+                else
+                {
+                    SendJson(
+                        response,
+                        transactionFounded,
+                        AppJsonContext.Default.Transaction
+                    );
+                }
+            }
+            else if (route == "/balance" && request.HttpMethod == "GET")
             {
                 decimal incomes = 0m;
                 decimal outcomes = 0m;
                 decimal balance;
                 foreach (Transaction transaction in transactions)
                 {
-                    if (transaction.Type == "Income")
+                    if (transaction.Type == TransactionType.Income)
                     {
                         incomes += transaction.Value;
                     }
-                    if (transaction.Type == "Outcome")
+                    if (transaction.Type == TransactionType.Outcome)
                     {
                         outcomes += transaction.Value;
                     }
@@ -90,7 +119,7 @@ class MoneyControl
 
                 foreach (Transaction transaction in transactions)
                 {
-                    if (transaction.Type == "Income")
+                    if (transaction.Type == TransactionType.Income)
                     {
                         incomes.Add(transaction);
                     }
@@ -108,7 +137,7 @@ class MoneyControl
 
                 foreach (Transaction transaction in transactions)
                 {
-                    if (transaction.Type == "Outcome")
+                    if (transaction.Type == TransactionType.Outcome)
                     {
                         incomes.Add(transaction);
                     }
@@ -125,8 +154,8 @@ class MoneyControl
                 response.StatusCode = 404;
                 SendJson(
                     response,
-                    new ErrorNotFoundResponse("Not Found", 404),
-                    AppJsonContext.Default.ErrorNotFoundResponse
+                    new ErrorResponse("Not Found", 404),
+                    AppJsonContext.Default.ErrorResponse
                 );
             }
         }
@@ -151,7 +180,7 @@ class MoneyControl
 }
 
 [JsonSerializable(typeof(MessageResponse))]
-[JsonSerializable(typeof(ErrorNotFoundResponse))]
+[JsonSerializable(typeof(ErrorResponse))]
 [JsonSerializable(typeof(Transaction))]
 [JsonSerializable(typeof(List<Transaction>))]
 [JsonSerializable(typeof(Summary))]
@@ -163,5 +192,12 @@ class Transaction
     public int Id { get; set; } = initialId++;
     public required string Description { get; set; }
     public required decimal Value { get; set; }
-    public required string Type { get; set; }
+    public required TransactionType Type { get; set; }
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<TransactionType>))]
+enum TransactionType
+{
+    Income,
+    Outcome
 }
