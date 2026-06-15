@@ -38,6 +38,7 @@ class MoneyControl
                     string requestBody = ReadJson(request.InputStream);
                     Transaction transaction = JsonSerializer.Deserialize(requestBody, AppJsonContext.Default.Transaction);
                     transactions.Add(transaction);
+                    SaveTransactionsFile(transactions);
                     SendJson(
                         response,
                         new MessageResponse("Dado lançado com sucesso!"),
@@ -45,13 +46,11 @@ class MoneyControl
                     );
                 }
                 catch
-                // catch (Exception error)
                 {
                     response.StatusCode = 400;
                     SendJson(
                         response,
                         new ErrorResponse("Corpo da requisição inválido", 400),
-                        // new ErrorResponse(error.Message, 400),
                         AppJsonContext.Default.ErrorResponse
                     );
                 }
@@ -87,6 +86,34 @@ class MoneyControl
                         response,
                         transactionFounded,
                         AppJsonContext.Default.Transaction
+                    );
+                }
+            }
+            else if (
+                segments[0] == "transactions"
+                && segments.Length == 2
+                && request.HttpMethod == "DELETE"
+            )
+            {
+                bool parsed = int.TryParse(segments[1], out int id);
+                Transaction? transactionFounded = transactions.Find(transaction => transaction.Id == id);
+
+                if (transactionFounded is null)
+                {
+                    SendJson(
+                        response,
+                        new MessageResponse($"Nenhuma transacão com id: {id} foi encontrada."),
+                        AppJsonContext.Default.MessageResponse
+                    );
+                }
+                else
+                {
+                    transactions.Remove(transactionFounded);
+                    SaveTransactionsFile(transactions);
+                    SendJson(
+                        response,
+                        new MessageResponse("Transação deletada com sucesso."),
+                        AppJsonContext.Default.MessageResponse
                     );
                 }
             }
@@ -177,6 +204,11 @@ class MoneyControl
         response.Close();
     }
 
+    private static void SaveTransactionsFile(List<Transaction> transactions)
+    {
+        string json = JsonSerializer.Serialize(transactions, AppJsonContext.Default.ListTransaction);
+        File.WriteAllText("transactions.json", json);
+    }
 }
 
 [JsonSerializable(typeof(MessageResponse))]
