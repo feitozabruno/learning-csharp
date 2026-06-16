@@ -29,7 +29,6 @@ class MoneyControl
         Console.WriteLine("Servidor iniciado em http://localhost:5000");
 
         Money money = new Money();
-        List<Transaction> transactions = new List<Transaction>();
 
         while (true)
         {
@@ -41,12 +40,32 @@ class MoneyControl
             string route = request.Url!.AbsolutePath;
             string[] segments = route.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-            if (route == "/new-transaction" && request.HttpMethod == "POST")
+            if (route == "/" && request.HttpMethod == "GET")
+            {
+                SendJson(
+                    response,
+                    new MessageResponse("Hello, World!"),
+                    AppJsonContext.Default.MessageResponse
+                );
+            }
+            else if (route == "/new-transaction" && request.HttpMethod == "POST")
             {
                 try
                 {
                     string requestBody = ReadJson(request.InputStream);
-                    Transaction transaction = JsonSerializer.Deserialize(requestBody, AppJsonContext.Default.Transaction);
+                    Transaction? transaction = JsonSerializer.Deserialize(requestBody, AppJsonContext.Default.Transaction);
+
+                    if (transaction is null)
+                    {
+                        response.StatusCode = 400;
+                        SendJson(
+                            response,
+                            new ErrorResponse("O corpo da requisição não é válido", 400),
+                            AppJsonContext.Default.ErrorResponse
+                        );
+                        continue;
+                    }
+
                     money.CreateTransaction(transaction);
                     SendJson(
                         response,
@@ -72,7 +91,20 @@ class MoneyControl
                 && request.HttpMethod == "GET"
             )
             {
-                List<Transaction> categorized = money.CategorizedTransactions(request.QueryString["category"]);
+                string? queryString = request.QueryString["category"];
+
+                if (queryString == null || queryString == "")
+                {
+                    response.StatusCode = 400;
+                    SendJson(
+                        response,
+                        new ErrorResponse("O parâmetro enviado não é válido", 400),
+                        AppJsonContext.Default.ErrorResponse
+                    );
+                    continue;
+                }
+
+                List<Transaction> categorized = money.CategorizedTransactions(queryString);
                 SendJson(
                     response,
                     categorized,
@@ -83,7 +115,7 @@ class MoneyControl
             {
                 SendJson(
                     response,
-                    transactions,
+                    money.ListTransactions(),
                     AppJsonContext.Default.ListTransaction
                 );
             }
@@ -94,24 +126,37 @@ class MoneyControl
             )
             {
                 bool parsed = int.TryParse(segments[1], out int id);
-                Transaction? transactionFounded = transactions.Find(transaction => transaction.Id == id);
 
-                if (transactionFounded is null)
+                if (!parsed)
                 {
+                    response.StatusCode = 400;
                     SendJson(
                         response,
-                        new MessageResponse($"Nenhuma transacão com id: {id} foi encontrada."),
-                        AppJsonContext.Default.MessageResponse
+                        new ErrorResponse("O id do recurso informado não é válido", 400),
+                        AppJsonContext.Default.ErrorResponse
                     );
+                    continue;
                 }
-                else
+
+                Transaction? transaction = money.FindTransaction(id);
+
+                if (transaction is null)
                 {
+                    response.StatusCode = 404;
                     SendJson(
                         response,
-                        transactionFounded,
-                        AppJsonContext.Default.Transaction
+                        new ErrorResponse($"Nenhuma transacão com id: {id} foi encontrada.", 404),
+                        AppJsonContext.Default.ErrorResponse
                     );
+                    continue;
                 }
+
+                SendJson(
+                    response,
+                    transaction,
+                    AppJsonContext.Default.Transaction
+                );
+                continue;
             }
             else if (
                 segments[0] == "transactions"
@@ -161,19 +206,6 @@ class MoneyControl
                     continue;
                 }
 
-                Transaction? transaction = transactions.Find(transaction => transaction.Id == id);
-
-                if (transaction is null)
-                {
-                    response.StatusCode = 404;
-                    SendJson(
-                        response,
-                        new ErrorResponse($"Nenhuma transacão com id: {id} foi encontrada.", 404),
-                        AppJsonContext.Default.ErrorResponse
-                    );
-                    continue;
-                }
-
                 bool hasUpdates = parsedBody.Description is not null
                                   || parsedBody.Value is not null
                                   || parsedBody.Type is not null
@@ -190,27 +222,19 @@ class MoneyControl
                     continue;
                 }
 
-                if (parsedBody.Description is not null)
+                Transaction? transaction = money.UpdateTransaction(id, parsedBody);
+
+                if (transaction is null)
                 {
-                    transaction.Description = parsedBody.Description;
+                    response.StatusCode = 404;
+                    SendJson(
+                        response,
+                        new ErrorResponse($"Nenhuma transacão com id: {id} foi encontrada.", 404),
+                        AppJsonContext.Default.ErrorResponse
+                    );
+                    continue;
                 }
 
-                if (parsedBody.Value is not null)
-                {
-                    transaction.Value = parsedBody.Value.Value;
-                }
-
-                if (parsedBody.Type is not null)
-                {
-                    transaction.Type = parsedBody.Type.Value;
-                }
-
-                if (parsedBody.Category is not null)
-                {
-                    transaction.Category = parsedBody.Category;
-                }
-
-                SaveTransactionsFile(transactions);
                 SendJson(
                     response,
                     transaction,
@@ -225,83 +249,60 @@ class MoneyControl
             )
             {
                 bool parsed = int.TryParse(segments[1], out int id);
-                Transaction? transactionFounded = transactions.Find(transaction => transaction.Id == id);
 
-                if (transactionFounded is null)
+                if (!parsed)
                 {
+                    response.StatusCode = 400;
                     SendJson(
                         response,
-                        new MessageResponse($"Nenhuma transacão com id: {id} foi encontrada."),
-                        AppJsonContext.Default.MessageResponse
+                        new ErrorResponse("O id do recurso informado não é válido", 400),
+                        AppJsonContext.Default.ErrorResponse
                     );
+                    continue;
                 }
-                else
+
+                bool transactionRemoved = money.RemoveTransaction(id);
+
+                if (!transactionRemoved)
                 {
-                    transactions.Remove(transactionFounded);
-                    SaveTransactionsFile(transactions);
+                    response.StatusCode = 404;
                     SendJson(
                         response,
-                        new MessageResponse("Transação deletada com sucesso."),
-                        AppJsonContext.Default.MessageResponse
+                        new ErrorResponse($"Nenhuma transacão com id: {id} foi encontrada.", 404),
+                        AppJsonContext.Default.ErrorResponse
                     );
+                    continue;
                 }
+
+                SendJson(
+                    response,
+                    new MessageResponse("Transação deletada com sucesso."),
+                    AppJsonContext.Default.MessageResponse
+                );
+                continue;
             }
             else if (route == "/balance" && request.HttpMethod == "GET")
             {
-                decimal incomes = 0m;
-                decimal outcomes = 0m;
-                decimal balance;
-                foreach (Transaction transaction in transactions)
-                {
-                    if (transaction.Type == TransactionType.Income)
-                    {
-                        incomes += transaction.Value;
-                    }
-                    if (transaction.Type == TransactionType.Outcome)
-                    {
-                        outcomes += transaction.Value;
-                    }
-                }
-                balance = incomes - outcomes;
+                Summary summary = money.GetBalance();
                 SendJson(
                     response,
-                    new Summary(incomes, outcomes, balance),
+                    summary,
                     AppJsonContext.Default.Summary
                 );
             }
             else if (route == "/incomes" && request.HttpMethod == "GET")
             {
-                List<Transaction> incomes = new List<Transaction>();
-
-                foreach (Transaction transaction in transactions)
-                {
-                    if (transaction.Type == TransactionType.Income)
-                    {
-                        incomes.Add(transaction);
-                    }
-                }
-
                 SendJson(
                     response,
-                    incomes,
+                    money.FindTransactionType(TransactionType.Income),
                     AppJsonContext.Default.ListTransaction
                 );
             }
             else if (route == "/outcomes" && request.HttpMethod == "GET")
             {
-                List<Transaction> incomes = new List<Transaction>();
-
-                foreach (Transaction transaction in transactions)
-                {
-                    if (transaction.Type == TransactionType.Outcome)
-                    {
-                        incomes.Add(transaction);
-                    }
-                }
-
                 SendJson(
                     response,
-                    incomes,
+                    money.FindTransactionType(TransactionType.Outcome),
                     AppJsonContext.Default.ListTransaction
                 );
             }
@@ -332,12 +333,6 @@ class MoneyControl
         response.OutputStream.Write(buffer);
         response.Close();
     }
-
-    private static void SaveTransactionsFile(List<Transaction> transactions)
-    {
-        string json = JsonSerializer.Serialize(transactions, AppJsonContext.Default.ListTransaction);
-        File.WriteAllText("transactions.json", json);
-    }
 }
 
 class Money
@@ -346,22 +341,107 @@ class Money
 
     public Transaction CreateTransaction(Transaction transaction)
     {
-        Transaction newTransaction = new Transaction
-        {
-            Description = transaction.Description,
-            Value = transaction.Value,
-            Type = transaction.Type,
-            Category = transaction.Category
-        };
-
-        transactions.Add(newTransaction);
+        transactions.Add(transaction);
         SaveTransactionsFile(transactions);
-        return newTransaction;
+        return transaction;
+    }
+
+    public List<Transaction> ListTransactions()
+    {
+        return transactions;
+    }
+
+    public Transaction? FindTransaction(int id)
+    {
+        return transactions.Find(transaction => transaction.Id == id);
+    }
+
+    public Transaction? UpdateTransaction(int id, UpdateTransaction? updateTransaction)
+    {
+        Transaction? transaction = FindTransaction(id);
+
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        if (updateTransaction?.Description is not null)
+        {
+            transaction.Description = updateTransaction.Description;
+        }
+
+        if (updateTransaction?.Value is not null)
+        {
+            transaction.Value = updateTransaction.Value.Value;
+        }
+
+        if (updateTransaction?.Type is not null)
+        {
+            transaction.Type = updateTransaction.Type.Value;
+        }
+
+        if (updateTransaction?.Category is not null)
+        {
+            transaction.Category = updateTransaction.Category;
+        }
+
+        SaveTransactionsFile(transactions);
+        return transaction;
+    }
+
+    public bool RemoveTransaction(int id)
+    {
+        Transaction? transaction = FindTransaction(id);
+
+        if (transaction is not null)
+        {
+            transactions.Remove(transaction);
+            SaveTransactionsFile(transactions);
+            return true;
+        }
+
+        return false;
     }
 
     public List<Transaction> CategorizedTransactions(string category)
     {
-        return transactions.FindAll(transaction => transaction.Category.Equals(category, StringComparison.CurrentCultureIgnoreCase));
+        List<Transaction> categorized = new List<Transaction>();
+
+        foreach (Transaction transaction in transactions)
+        {
+            if (transaction.Category.Equals(category, StringComparison.CurrentCultureIgnoreCase))
+            {
+                categorized.Add(transaction);
+            }
+        }
+
+        return categorized;
+    }
+
+    public Summary GetBalance()
+    {
+        decimal incomes = 0m;
+        decimal outcomes = 0m;
+        decimal balance;
+
+        foreach (Transaction transaction in transactions)
+        {
+            if (transaction.Type == TransactionType.Income)
+            {
+                incomes += transaction.Value;
+            }
+            if (transaction.Type == TransactionType.Outcome)
+            {
+                outcomes += transaction.Value;
+            }
+        }
+        balance = incomes - outcomes;
+        return new Summary(incomes, outcomes, balance);
+    }
+
+    public List<Transaction> FindTransactionType(TransactionType type)
+    {
+        return transactions.FindAll(transaction => transaction.Type == type);
     }
 
     private static void SaveTransactionsFile(List<Transaction> transactions)
@@ -381,8 +461,8 @@ internal partial class AppJsonContext : JsonSerializerContext { }
 
 class Transaction
 {
-    private static int initialId = 1;
-    public int Id { get; set; } = initialId++;
+    private static int InitialId = 1;
+    public int Id { get; private set; } = InitialId++;
     public required string Description { get; set; }
     public required decimal Value { get; set; }
     public required TransactionType Type { get; set; }
