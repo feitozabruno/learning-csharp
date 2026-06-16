@@ -27,6 +27,8 @@ class MoneyControl
         server.Prefixes.Add("http://127.0.0.1:5000/");
         server.Start();
         Console.WriteLine("Servidor iniciado em http://localhost:5000");
+
+        Money money = new Money();
         List<Transaction> transactions = new List<Transaction>();
 
         while (true)
@@ -45,13 +47,13 @@ class MoneyControl
                 {
                     string requestBody = ReadJson(request.InputStream);
                     Transaction transaction = JsonSerializer.Deserialize(requestBody, AppJsonContext.Default.Transaction);
-                    transactions.Add(transaction);
-                    SaveTransactionsFile(transactions);
+                    money.CreateTransaction(transaction);
                     SendJson(
                         response,
                         new MessageResponse("Dado lançado com sucesso!"),
                         AppJsonContext.Default.MessageResponse
                     );
+                    continue;
                 }
                 catch
                 {
@@ -61,6 +63,7 @@ class MoneyControl
                         new ErrorResponse("Corpo da requisição inválido", 400),
                         AppJsonContext.Default.ErrorResponse
                     );
+                    continue;
                 }
             }
             else if (
@@ -69,7 +72,7 @@ class MoneyControl
                 && request.HttpMethod == "GET"
             )
             {
-                List<Transaction> categorized = transactions.FindAll(transaction => transaction.Category.ToLower() == request.QueryString["category"].ToLower());
+                List<Transaction> categorized = money.CategorizedTransactions(request.QueryString["category"]);
                 SendJson(
                     response,
                     categorized,
@@ -123,7 +126,7 @@ class MoneyControl
                     response.StatusCode = 400;
                     SendJson(
                         response,
-                        new ErrorResponse("O ID do recurso não é válido.", 400),
+                        new ErrorResponse("O id do recurso informado não é válido.", 400),
                         AppJsonContext.Default.ErrorResponse
                     );
                     continue;
@@ -147,70 +150,73 @@ class MoneyControl
                     continue;
                 }
 
-                Transaction? transactionFounded = transactions.Find(transaction => transaction.Id == id);
-
-                if (transactionFounded is null)
+                if (parsedBody is null)
                 {
+                    response.StatusCode = 400;
                     SendJson(
                         response,
-                        new MessageResponse($"Nenhuma transacão com id: {id} foi encontrada."),
-                        AppJsonContext.Default.MessageResponse
+                        new ErrorResponse("Corpo da requisição é inválido.", 400),
+                        AppJsonContext.Default.ErrorResponse
+                    );
+                    continue;
+                }
+
+                Transaction? transaction = transactions.Find(transaction => transaction.Id == id);
+
+                if (transaction is null)
+                {
+                    response.StatusCode = 404;
+                    SendJson(
+                        response,
+                        new ErrorResponse($"Nenhuma transacão com id: {id} foi encontrada.", 404),
+                        AppJsonContext.Default.ErrorResponse
+                    );
+                    continue;
+                }
+
+                bool hasUpdates = parsedBody.Description is not null
+                                  || parsedBody.Value is not null
+                                  || parsedBody.Type is not null
+                                  || parsedBody.Category is not null;
+
+                if (!hasUpdates)
+                {
+                    response.StatusCode = 400;
+                    SendJson(
+                        response,
+                        new ErrorResponse($"Nenhum dado para atualizar foi enviado.", 400),
+                        AppJsonContext.Default.ErrorResponse
                     );
                     continue;
                 }
 
                 if (parsedBody.Description is not null)
                 {
-                    transactionFounded.Description = parsedBody.Description;
+                    transaction.Description = parsedBody.Description;
                 }
 
                 if (parsedBody.Value is not null)
                 {
-                    transactionFounded.Value = parsedBody.Value.Value;
+                    transaction.Value = parsedBody.Value.Value;
                 }
 
                 if (parsedBody.Type is not null)
                 {
-                    transactionFounded.Type = parsedBody.Type.Value;
+                    transaction.Type = parsedBody.Type.Value;
                 }
 
                 if (parsedBody.Category is not null)
                 {
-                    transactionFounded.Category = parsedBody.Category;
+                    transaction.Category = parsedBody.Category;
                 }
 
-                if (
-                    transactionFounded is not null
-                    && parsedBody.Description is null
-                    && parsedBody.Value is null
-                    && parsedBody.Type is null
-                    && parsedBody.Category is null
-                )
-                {
-                    SendJson(
-                        response,
-                        new MessageResponse($"Nenhum dado para atualizar foi enviado."),
-                        AppJsonContext.Default.MessageResponse
-                    );
-                    continue;
-                }
-
-                if (
-                    transactionFounded is not null
-                    && parsedBody.Description is not null
-                    || parsedBody.Value is not null
-                    || parsedBody.Type is not null
-                    || parsedBody.Category is not null
-                )
-                {
-                    SaveTransactionsFile(transactions);
-                    SendJson(
-                        response,
-                        transactionFounded,
-                        AppJsonContext.Default.Transaction
-                    );
-                    continue;
-                }
+                SaveTransactionsFile(transactions);
+                SendJson(
+                    response,
+                    transaction,
+                    AppJsonContext.Default.Transaction
+                );
+                continue;
             }
             else if (
                 segments[0] == "transactions"
@@ -325,6 +331,37 @@ class MoneyControl
         response.ContentLength64 = buffer.Length;
         response.OutputStream.Write(buffer);
         response.Close();
+    }
+
+    private static void SaveTransactionsFile(List<Transaction> transactions)
+    {
+        string json = JsonSerializer.Serialize(transactions, AppJsonContext.Default.ListTransaction);
+        File.WriteAllText("transactions.json", json);
+    }
+}
+
+class Money
+{
+    private readonly List<Transaction> transactions = new List<Transaction>();
+
+    public Transaction CreateTransaction(Transaction transaction)
+    {
+        Transaction newTransaction = new Transaction
+        {
+            Description = transaction.Description,
+            Value = transaction.Value,
+            Type = transaction.Type,
+            Category = transaction.Category
+        };
+
+        transactions.Add(newTransaction);
+        SaveTransactionsFile(transactions);
+        return newTransaction;
+    }
+
+    public List<Transaction> CategorizedTransactions(string category)
+    {
+        return transactions.FindAll(transaction => transaction.Category.Equals(category, StringComparison.CurrentCultureIgnoreCase));
     }
 
     private static void SaveTransactionsFile(List<Transaction> transactions)
