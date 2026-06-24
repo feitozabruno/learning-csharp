@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
-
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 List<Task> tasks = new List<Task>();
@@ -56,6 +54,8 @@ app.MapDelete("/tasks/{id}", (int id) =>
     return Results.NoContent();
 });
 
+app.UseSwagger();
+app.UseSwaggerUI();
 app.Run();
 
 Task? FindTask(int id) => tasks.Find(task => task.Id == id);
