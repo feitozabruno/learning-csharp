@@ -1,14 +1,25 @@
 ### Listar transações
 GET http://localhost:5000/api/transactions
 
-### Criar transação
+### Criar transação 1
+POST http://localhost:5000/api/transactions
+Content-Type: application/json
+
+{
+    "description": "Salário",
+    "value": 8000,
+    "type": "Income",
+    "category": "Receita"
+}
+
+### Criar transação 2
 POST http://localhost:5000/api/transactions
 Content-Type: application/json
 
 {
     "description": "Aluguel",
     "value": 1500,
-    "type": "Despesa",
+    "type": "Outcome",
     "category": "Moradia"
 }
 
@@ -18,10 +29,22 @@ GET http://localhost:5000/api/transactions/1
 ### Deletar uma transação
 DELETE http://localhost:5000/api/transactions/1
 
-### Autalizar transação
-PATCH http://localhost:5000/api/transactions/1
+### Atualizar transação
+PATCH http://localhost:5000/api/transactions/2
 Content-Type: application/json
 
 {
-    "category": "casa"
+    "type": "outcome"
 }
+
+### Verificar saldo
+GET http://localhost:5000/api/summary
+
+### Verificar entradas
+GET http://localhost:5000/api/summary/incomes
+
+### Verificar saídas
+GET http://localhost:5000/api/summary/outcomes
+
+### Verificar categoria
+GET http://localhost:5000/api/summary/receita
