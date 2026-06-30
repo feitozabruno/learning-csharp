@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-public record TransactionUpdateDto(
+public record TransactionCreateDto(
     [Required(ErrorMessage = "Descrição é obrigatória.")]
     string Description,
 

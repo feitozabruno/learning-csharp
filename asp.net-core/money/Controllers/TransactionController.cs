@@ -17,17 +17,11 @@ public class TransactionsController : ControllerBase
         return Ok(_repo.GetAll());
     }
 
-    // esse método (POST /api/transactions)
-    // converte o body para transaction diretamente,
-    // talvez não seja o melhor a se fazer,
-    // porque em caso de erro,
-    // não é possivel retornar uma mensagem de erro personalizada,
-    // o ideal seria identificar o erro e direcionar o usuário a corrigir.
     [HttpPost]
-    public IActionResult Create([FromBody] Transaction transaction)
+    public IActionResult Create([FromBody] TransactionCreateDto dto)
     {
-        Transaction newTransaction = _repo.Create(transaction);
-        return Created($"/api/transactions/{newTransaction.Id}", newTransaction);
+        Transaction transaction = _repo.Create(dto);
+        return Created($"/api/transactions/{transaction.Id}", transaction);
     }
 
     [HttpGet("{id}")]
@@ -37,7 +31,6 @@ public class TransactionsController : ControllerBase
         return transaction is null ? NotFound() : Ok(transaction);
     }
 
-    // mesmo problema da conversão direta do método POST
     [HttpDelete("{id}")]
     public IActionResult Delete([FromRoute] int id)
     {
@@ -45,16 +38,15 @@ public class TransactionsController : ControllerBase
         return removed ? NoContent() : NotFound();
     }
 
-
     [HttpPut("{id}")]
-    public IActionResult UpdatePut([FromRoute] int id, [FromBody] Transaction updatedTransaction)
+    public IActionResult UpdatePut([FromRoute] int id, [FromBody] TransactionUpdateDto dto)
     {
-        return Ok(_repo.UpdatePut(id, updatedTransaction));
+        return Ok(_repo.UpdatePut(id, dto));
     }
 
     [HttpPatch("{id}")]
-    public IActionResult UpdatePatch([FromRoute] int id, TransactionPatch patch)
+    public IActionResult UpdatePatch([FromRoute] int id, TransactionPatchDto dto)
     {
-        return Ok(_repo.UpdatePatch(id, patch));
+        return Ok(_repo.UpdatePatch(id, dto));
     }
 }

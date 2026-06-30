@@ -1,9 +1,9 @@
 public interface ITransactionRepository
 {
     List<Transaction> GetAll();
-    Transaction Create(Transaction transaction);
+    Transaction Create(TransactionCreateDto dto);
     Transaction? GetById(int id);
     bool Delete(int id);
-    Transaction? UpdatePut(int id, Transaction updatedTransaction);
-    Transaction? UpdatePatch(int id, TransactionPatch patch);
+    Transaction? UpdatePut(int id, TransactionUpdateDto dto);
+    Transaction? UpdatePatch(int id, TransactionPatchDto dto);
 }
