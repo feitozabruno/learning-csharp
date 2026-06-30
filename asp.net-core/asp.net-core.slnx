@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="money/money.csproj" />
+  <Project Path="todo/todo.csproj" />
+</Solution>

@@ -1,0 +1,27 @@
+### Listar transações
+GET http://localhost:5000/api/transactions
+
+### Criar transação
+POST http://localhost:5000/api/transactions
+Content-Type: application/json
+
+{
+    "description": "Aluguel",
+    "value": 1500,
+    "type": "Despesa",
+    "category": "Moradia"
+}
+
+### Listar uma transação
+GET http://localhost:5000/api/transactions/1
+
+### Deletar uma transação
+DELETE http://localhost:5000/api/transactions/1
+
+### Autalizar transação
+PATCH http://localhost:5000/api/transactions/1
+Content-Type: application/json
+
+{
+    "category": "casa"
+}
