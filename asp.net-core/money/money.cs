@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Money.Repositories;
+using Money.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

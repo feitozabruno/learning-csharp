@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Money.Models;
 using System.Globalization;
+using Money.Repositories.Interfaces;
+
+namespace Money.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]

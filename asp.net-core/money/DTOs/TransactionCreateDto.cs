@@ -1,4 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using Money.Models;
+
+namespace Money.Dtos;
 
 public record TransactionCreateDto(
     [Required(ErrorMessage = "Descrição é obrigatória.")]

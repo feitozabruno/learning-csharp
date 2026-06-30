@@ -1,3 +1,9 @@
+using Money.Models;
+using Money.Dtos;
+using Money.Repositories.Interfaces;
+
+namespace Money.Repositories;
+
 class TransactionRepository : ITransactionRepository
 {
     private static readonly List<Transaction> transactions = new List<Transaction>();

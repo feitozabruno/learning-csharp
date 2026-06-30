@@ -1,3 +1,5 @@
+namespace Money.Models;
+
 public class Transaction
 {
     private static int InitialId = 1;

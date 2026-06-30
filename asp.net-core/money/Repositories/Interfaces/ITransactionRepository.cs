@@ -1,3 +1,8 @@
+using Money.Models;
+using Money.Dtos;
+
+namespace Money.Repositories.Interfaces;
+
 public interface ITransactionRepository
 {
     List<Transaction> GetAll();
