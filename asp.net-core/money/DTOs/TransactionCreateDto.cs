@@ -9,7 +9,7 @@ public record TransactionCreateDto(
     decimal Value,
 
     [Required(ErrorMessage = "Tipo é obrigatório.")]
-    string Type,
+    TransactionType Type,
 
     [Required(ErrorMessage = "Categoria é obrigatória.")]
     string Category

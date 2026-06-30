@@ -73,7 +73,7 @@ class TransactionRepository : ITransactionRepository
 
         if (dto.Type is not null)
         {
-            transactionFound.Type = dto.Type;
+            transactionFound.Type = (TransactionType)dto.Type;
         }
 
         if (dto.Category is not null)
