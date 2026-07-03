@@ -17,9 +17,9 @@ public class SummaryController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Summary()
+    public async Task<IActionResult> Summary()
     {
-        List<Transaction> transactions = _repo.GetAll();
+        List<Transaction> transactions = await _repo.GetAllAsync();
         decimal incomes = 0;
         decimal outcomes = 0;
 
@@ -42,9 +42,9 @@ public class SummaryController : ControllerBase
     }
 
     [HttpGet("incomes")]
-    public IActionResult Incomes()
+    public async Task<IActionResult> Incomes()
     {
-        List<Transaction> transactions = _repo.GetAll();
+        List<Transaction> transactions = await _repo.GetAllAsync();
         decimal incomes = 0;
 
         foreach (Transaction transaction in transactions)
@@ -62,9 +62,9 @@ public class SummaryController : ControllerBase
     }
 
     [HttpGet("outcomes")]
-    public IActionResult Outcomes()
+    public async Task<IActionResult> Outcomes()
     {
-        List<Transaction> transactions = _repo.GetAll();
+        List<Transaction> transactions = await _repo.GetAllAsync();
         decimal outcomes = 0;
 
         foreach (Transaction transaction in transactions)
@@ -82,9 +82,9 @@ public class SummaryController : ControllerBase
     }
 
     [HttpGet("{category}")]
-    public IActionResult Category([FromRoute] string category)
+    public async Task<IActionResult> Category([FromRoute] string category)
     {
-        List<Transaction> transactions = _repo.GetAll();
+        List<Transaction> transactions = await _repo.GetAllAsync();
 
         decimal sumCategory = 0;
 

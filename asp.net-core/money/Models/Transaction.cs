@@ -2,12 +2,12 @@ namespace Money.Models;
 
 public class Transaction
 {
-    private static int InitialId = 1;
-    public int Id { get; private set; } = InitialId++;
-    public required string Description { get; set; }
-    public required decimal Value { get; set; }
-    public required TransactionType Type { get; set; }
-    public required string Category { get; set; }
+    public int Id { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public decimal Value { get; set; }
+    public TransactionType Type { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public enum TransactionType

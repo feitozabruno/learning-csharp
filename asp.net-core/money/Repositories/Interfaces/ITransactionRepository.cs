@@ -5,10 +5,10 @@ namespace Money.Repositories.Interfaces;
 
 public interface ITransactionRepository
 {
-    List<Transaction> GetAll();
-    Transaction Create(TransactionCreateDto dto);
-    Transaction? GetById(int id);
-    bool Delete(int id);
-    Transaction? UpdatePut(int id, TransactionUpdateDto dto);
-    Transaction? UpdatePatch(int id, TransactionPatchDto dto);
+    Task<List<Transaction>> GetAllAsync();
+    Task<Transaction> Create(TransactionCreateDto dto);
+    Task<Transaction?> GetByIdAsync(int id);
+    Task<bool> Delete(int id);
+    Task<Transaction?> UpdatePut(int id, TransactionUpdateDto dto);
+    Task<Transaction?> UpdatePatch(int id, TransactionPatchDto dto);
 }

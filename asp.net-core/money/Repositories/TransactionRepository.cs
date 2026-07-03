@@ -1,19 +1,26 @@
 using Money.Models;
 using Money.Dtos;
 using Money.Repositories.Interfaces;
+using Money.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Money.Repositories;
 
 class TransactionRepository : ITransactionRepository
 {
-    private static readonly List<Transaction> transactions = new List<Transaction>();
+    private readonly AppDbContext _context;
 
-    public List<Transaction> GetAll()
+    public TransactionRepository(AppDbContext context)
     {
-        return transactions;
+        _context = context;
     }
 
-    public Transaction Create(TransactionCreateDto dto)
+    public async Task<List<Transaction>> GetAllAsync()
+    {
+        return await _context.Transactions.ToListAsync();
+    }
+
+    public async Task<Transaction> Create(TransactionCreateDto dto)
     {
         Transaction newTransaction = new Transaction
         {
@@ -22,26 +29,27 @@ class TransactionRepository : ITransactionRepository
             Type = dto.Type,
             Category = dto.Category
         };
-
-        transactions.Add(newTransaction);
+        await _context.Transactions.AddAsync(newTransaction);
+        await _context.SaveChangesAsync();
         return newTransaction;
     }
 
-    public Transaction? GetById(int id)
+    public async Task<Transaction?> GetByIdAsync(int id)
     {
-        return transactions.Find(transaction => transaction.Id == id);
+        return await _context.Transactions.FindAsync(id);
     }
 
-    public bool Delete(int id)
+    public async Task<bool> Delete(int id)
     {
-        Transaction? transactionFound = GetById(id);
+        Transaction? transactionFound = await GetByIdAsync(id);
         if (transactionFound is null) return false;
-        return transactions.Remove(transactionFound);
+        _context.Transactions.Remove(transactionFound);
+        return true;
     }
 
-    public Transaction? UpdatePut(int id, TransactionUpdateDto dto)
+    public async Task<Transaction?> UpdatePut(int id, TransactionUpdateDto dto)
     {
-        Transaction? transactionFound = GetById(id);
+        Transaction? transactionFound = await GetByIdAsync(id);
         if (transactionFound is null) return null;
 
         transactionFound.Description = dto.Description;
@@ -52,9 +60,9 @@ class TransactionRepository : ITransactionRepository
         return transactionFound;
     }
 
-    public Transaction? UpdatePatch(int id, TransactionPatchDto dto)
+    public async Task<Transaction?> UpdatePatch(int id, TransactionPatchDto dto)
     {
-        Transaction? transactionFound = GetById(id);
+        Transaction? transactionFound = await GetByIdAsync(id);
         if (transactionFound is null) return null;
 
         if (
