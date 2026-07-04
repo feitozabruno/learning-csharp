@@ -44,6 +44,7 @@ class TransactionRepository : ITransactionRepository
         Transaction? transactionFound = await GetByIdAsync(id);
         if (transactionFound is null) return false;
         _context.Transactions.Remove(transactionFound);
+        await _context.SaveChangesAsync();
         return true;
     }
 
@@ -57,6 +58,7 @@ class TransactionRepository : ITransactionRepository
         transactionFound.Type = dto.Type;
         transactionFound.Category = dto.Category;
 
+        await _context.SaveChangesAsync();
         return transactionFound;
     }
 
@@ -94,7 +96,7 @@ class TransactionRepository : ITransactionRepository
         {
             transactionFound.Category = dto.Category;
         }
-
+        await _context.SaveChangesAsync();
         return transactionFound;
     }
 }

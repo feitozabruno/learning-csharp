@@ -27,14 +27,25 @@ Content-Type: application/json
 GET http://localhost:5000/api/transactions/1
 
 ### Deletar uma transação
-DELETE http://localhost:5000/api/transactions/1
+DELETE http://localhost:5000/api/transactions/2
 
-### Atualizar transação
+### Atualizar transação inteira
+PUT http://localhost:5000/api/transactions/3
+Content-Type: application/json
+
+{
+    "description": "Teste",
+    "value": 123.45,
+    "category": "teste",
+    "type": "outcome"
+}
+
+### Atualizar transação por propriedade
 PATCH http://localhost:5000/api/transactions/2
 Content-Type: application/json
 
 {
-    "type": "outcome"
+    "category": "casa"
 }
 
 ### Verificar saldo
