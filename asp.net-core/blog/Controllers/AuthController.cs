@@ -1,5 +1,5 @@
 using Blog.Models;
-using Blog.DTOs;
+using Blog.DTOs.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
