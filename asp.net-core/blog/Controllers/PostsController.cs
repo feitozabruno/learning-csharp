@@ -12,13 +12,13 @@ namespace Blog.Controllers;
 [Authorize]
 public class PostsController : ControllerBase
 {
-    private readonly IPostRepository _repo;
-    private readonly ICurrentUserService _currentUser;
+    private readonly IPostRepository _postRepository;
+    private readonly ICurrentUserService _currentUserService;
 
-    public PostsController(IPostRepository repo, ICurrentUserService currentUser)
+    public PostsController(IPostRepository postRepository, ICurrentUserService currentUserService)
     {
-        _repo = repo;
-        _currentUser = currentUser;
+        _postRepository = postRepository;
+        _currentUserService = currentUserService;
     }
 
     [HttpPost]
@@ -28,11 +28,11 @@ public class PostsController : ControllerBase
         {
             Title = dto.Title,
             Content = dto.Content,
-            Author = _currentUser.FullName,
-            UserId = _currentUser.UserId
+            Author = _currentUserService.FullName,
+            UserId = _currentUserService.UserId
         };
 
-        await _repo.AddAsync(newPost);
+        await _postRepository.AddAsync(newPost);
         return Created("", newPost);
     }
 }

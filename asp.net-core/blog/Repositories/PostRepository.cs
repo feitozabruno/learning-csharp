@@ -1,7 +1,6 @@
 using Blog.Repositories.Interfaces;
 using Blog.Models;
 using Blog.Data;
-using Blog.DTOs.Post;
 
 namespace Blog.Repositories;
 
