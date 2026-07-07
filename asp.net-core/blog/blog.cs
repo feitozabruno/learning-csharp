@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Blog.Repositories.Interfaces;
+using Blog.Repositories;
+using Blog.Services.Interfaces;
+using Blog.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,10 +51,13 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
+app.MapControllers();
 app.UseAuthentication(); // quem é você?
 app.UseAuthorization();  // você pode acessar isso?
-app.MapControllers();
 app.Run();
