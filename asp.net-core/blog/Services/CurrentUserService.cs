@@ -17,8 +17,8 @@ public class CurrentUserService : ICurrentUserService
         ?? throw new InvalidOperationException("Usuário não autenticado.");
 
     public string Email =>
-            _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email)
-            ?? throw new InvalidOperationException("Email não encontrado no token.");
+        _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email)
+        ?? throw new InvalidOperationException("Email não encontrado no token.");
 
     public string FullName =>
         _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name)

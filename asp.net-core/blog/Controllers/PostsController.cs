@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Blog.Repositories.Interfaces;
-using Blog.Services.Interfaces;
 using Blog.DTOs.Post;
 using Blog.Models;
 
@@ -10,29 +9,21 @@ namespace Blog.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class PostsController : ControllerBase
+public class PostsController(IPostRepository postRepository) : ControllerBase
 {
-    private readonly IPostRepository _postRepository;
-    private readonly ICurrentUserService _currentUserService;
-
-    public PostsController(IPostRepository postRepository, ICurrentUserService currentUserService)
-    {
-        _postRepository = postRepository;
-        _currentUserService = currentUserService;
-    }
+    private readonly IPostRepository _postRepository = postRepository;
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PostCreateDto dto)
     {
-        var newPost = new Post
-        {
-            Title = dto.Title,
-            Content = dto.Content,
-            Author = _currentUserService.FullName,
-            UserId = _currentUserService.UserId
-        };
-
-        await _postRepository.AddAsync(newPost);
+        Post newPost = await _postRepository.AddAsync(dto);
         return Created("", newPost);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync()
+    {
+        IEnumerable<Post> posts = await _postRepository.GetAllAsync();
+        return Ok(posts);
     }
 }
