@@ -1,10 +1,10 @@
 using Blog.Models;
-using Blog.DTOs.Post;
 
 namespace Blog.Repositories.Interfaces;
 
 public interface IPostRepository
 {
-    Task<Post> AddAsync(PostCreateDto dto);
+    Task AddAsync(Post post);
     Task<IEnumerable<Post>> GetAllAsync();
+    Task<Post?> GetByIdAsync(int id);
 }

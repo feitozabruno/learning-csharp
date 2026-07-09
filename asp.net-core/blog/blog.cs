@@ -54,6 +54,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();

@@ -1,29 +1,35 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Blog.Repositories.Interfaces;
+using Blog.Services.Interfaces;
 using Blog.DTOs.Post;
-using Blog.Models;
 
 namespace Blog.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class PostsController(IPostRepository postRepository) : ControllerBase
+public class PostsController(IPostService postService) : ControllerBase
 {
-    private readonly IPostRepository _postRepository = postRepository;
+    private readonly IPostService _postService = postService;
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PostCreateDto dto)
     {
-        Post newPost = await _postRepository.AddAsync(dto);
+        PostResponseDto newPost = await _postService.CreatePostAsync(dto);
         return Created("", newPost);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAllAsync()
     {
-        IEnumerable<Post> posts = await _postRepository.GetAllAsync();
+        IEnumerable<PostResponseDto> posts = await _postService.GetAllPostsAsync();
         return Ok(posts);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
+    {
+        PostResponseDto? postFound = await _postService.GetPostById(id);
+        return postFound is not null ? Ok(postFound) : NotFound();
     }
 }
