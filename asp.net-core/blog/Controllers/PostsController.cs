@@ -40,4 +40,16 @@ public class PostsController(IPostService postService) : ControllerBase
         PostResponseDto? updatedPost = await _postService.UpdatePostAsync(id, dto);
         return updatedPost is not null ? Ok(updatedPost) : NotFound();
     }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch([FromRoute] int id, PostPatchDto dto)
+    {
+        if (dto.Title is null && dto.Content is null)
+        {
+            return BadRequest("Nenhum dado para atualizar foi enviado.");
+        }
+
+        PostResponseDto? updatedPost = await _postService.PatchPostAsync(id, dto);
+        return updatedPost is not null ? Ok(updatedPost) : NotFound();
+    }
 }

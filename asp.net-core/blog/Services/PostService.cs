@@ -87,4 +87,26 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
             UpdatedAt = post.UpdatedAt
         };
     }
+
+    public async Task<PostResponseDto?> PatchPostAsync(int id, PostPatchDto dto)
+    {
+        Post? post = await _postRepository.GetByIdAsync(id);
+        if (post is null) return null;
+
+        if (dto.Title is not null) post.Title = dto.Title;
+        if (dto.Content is not null) post.Content = dto.Content;
+        post.UpdatedAt = DateTime.Now;
+
+        await _postRepository.UpdateAsync(post);
+
+        return new PostResponseDto
+        {
+            Id = post.Id,
+            Title = post.Title,
+            Content = post.Content,
+            Author = post.Author,
+            CreatedAt = post.CreatedAt,
+            UpdatedAt = post.UpdatedAt
+        };
+    }
 }
