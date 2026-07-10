@@ -31,14 +31,14 @@ public class PostsController(IPostService postService) : ControllerBase
     public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
     {
         PostResponseDto? postFound = await _postService.GetPostById(id);
-        return postFound is not null ? Ok(postFound) : NotFound();
+        return postFound is not null ? Ok(postFound) : NotFound("Post não encontrado.");
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, PostUpdateDto dto)
     {
         PostResponseDto? updatedPost = await _postService.UpdatePostAsync(id, dto);
-        return updatedPost is not null ? Ok(updatedPost) : NotFound();
+        return updatedPost is not null ? Ok(updatedPost) : NotFound("Post não encontrado.");
     }
 
     [HttpPatch("{id}")]
@@ -50,6 +50,13 @@ public class PostsController(IPostService postService) : ControllerBase
         }
 
         PostResponseDto? updatedPost = await _postService.PatchPostAsync(id, dto);
-        return updatedPost is not null ? Ok(updatedPost) : NotFound();
+        return updatedPost is not null ? Ok(updatedPost) : NotFound("Post não encontrado.");
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete([FromRoute] int id)
+    {
+        bool removed = await _postService.DeletePostAsync(id);
+        return removed ? NoContent() : NotFound("Post não encontrado.");
     }
 }

@@ -109,4 +109,12 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
             UpdatedAt = post.UpdatedAt
         };
     }
+
+    public async Task<bool> DeletePostAsync(int id)
+    {
+        Post? post = await _postRepository.GetByIdAsync(id);
+        if (post is null) return false;
+        await _postRepository.DeleteAsync(post);
+        return true;
+    }
 }

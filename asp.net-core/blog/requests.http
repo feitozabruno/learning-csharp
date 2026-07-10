@@ -37,7 +37,7 @@ Content-Type: application/json
     "Content": "Esse aqui é o conteúdo!"
 }
 
-### List all posts of all users
+### List all user posts
 GET http://localhost:5000/api/posts
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImVhMTg0OWViLWYwNmUtNGU1Yi05YTQwLTVmMDE4NWQ5ZTk0NSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImpvaG5kb2VAZW1haWwuY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IkpvaG4gRG9lIiwiZXhwIjoxNzgzNzUxNDMxLCJpc3MiOiJCbG9nQXBpIiwiYXVkIjoiQmxvZ0FwaSJ9.KBbgPMOq1GrQTIroDXEGLyv7A4ntcyusiq6ztzUz3gs
 
@@ -64,3 +64,7 @@ Content-Type: application/json
     "Title": "Title Patch?",
     "Content": "Content Patch?"
 }
+
+### Delete post by id
+DELETE http://localhost:5000/api/posts/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImVhMTg0OWViLWYwNmUtNGU1Yi05YTQwLTVmMDE4NWQ5ZTk0NSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImpvaG5kb2VAZW1haWwuY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IkpvaG4gRG9lIiwiZXhwIjoxNzgzNzUxNDMxLCJpc3MiOiJCbG9nQXBpIiwiYXVkIjoiQmxvZ0FwaSJ9.KBbgPMOq1GrQTIroDXEGLyv7A4ntcyusiq6ztzUz3gs

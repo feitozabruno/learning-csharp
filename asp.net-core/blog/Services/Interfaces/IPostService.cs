@@ -9,4 +9,5 @@ public interface IPostService
     Task<PostResponseDto?> GetPostById(int id);
     Task<PostResponseDto?> UpdatePostAsync(int id, PostUpdateDto dto);
     Task<PostResponseDto?> PatchPostAsync(int id, PostPatchDto dto);
+    Task<bool> DeletePostAsync(int id);
 }

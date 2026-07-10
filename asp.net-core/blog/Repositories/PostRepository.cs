@@ -31,4 +31,10 @@ public class PostRepository(AppDbContext context) : IPostRepository
         _context.Posts.Update(updatedPost);
         await _context.SaveChangesAsync();
     }
+
+    public async Task DeleteAsync(Post postRemoved)
+    {
+        _context.Posts.Remove(postRemoved);
+        await _context.SaveChangesAsync();
+    }
 }
