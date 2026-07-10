@@ -24,10 +24,12 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
 
         return new PostResponseDto
         {
+            Id = newPost.Id,
             Title = newPost.Title,
             Content = newPost.Content,
             Author = newPost.Author,
-            CreatedAt = newPost.CreatedAt
+            CreatedAt = newPost.CreatedAt,
+            UpdatedAt = newPost.UpdatedAt
         };
     }
 
@@ -39,10 +41,12 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
             .Where(post => post.UserId == _currentUserService.UserId)
             .Select(post => new PostResponseDto
             {
+                Id = post.Id,
                 Title = post.Title,
                 Content = post.Content,
                 Author = post.Author,
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
+                UpdatedAt = post.UpdatedAt
             });
     }
 
@@ -53,10 +57,34 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
 
         return new PostResponseDto
         {
+            Id = post.Id,
             Title = post.Title,
             Content = post.Content,
             Author = post.Author,
-            CreatedAt = post.CreatedAt
+            CreatedAt = post.CreatedAt,
+            UpdatedAt = post.UpdatedAt
+        };
+    }
+
+    public async Task<PostResponseDto?> UpdatePostAsync(int id, PostUpdateDto dto)
+    {
+        Post? post = await _postRepository.GetByIdAsync(id);
+        if (post is null) return null;
+
+        post.Title = dto.Title;
+        post.Content = dto.Content;
+        post.UpdatedAt = DateTime.UtcNow;
+
+        await _postRepository.UpdateAsync(post);
+
+        return new PostResponseDto
+        {
+            Id = post.Id,
+            Title = post.Title,
+            Content = post.Content,
+            Author = post.Author,
+            CreatedAt = post.CreatedAt,
+            UpdatedAt = post.UpdatedAt
         };
     }
 }

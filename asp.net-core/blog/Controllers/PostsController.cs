@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Blog.Services.Interfaces;
 using Blog.DTOs.Post;
+using Blog.Models;
 
 namespace Blog.Controllers;
 
@@ -31,5 +32,12 @@ public class PostsController(IPostService postService) : ControllerBase
     {
         PostResponseDto? postFound = await _postService.GetPostById(id);
         return postFound is not null ? Ok(postFound) : NotFound();
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update([FromRoute] int id, PostUpdateDto dto)
+    {
+        PostResponseDto? updatedPost = await _postService.UpdatePostAsync(id, dto);
+        return updatedPost is not null ? Ok(updatedPost) : NotFound();
     }
 }

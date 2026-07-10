@@ -2,6 +2,7 @@ using Blog.Repositories.Interfaces;
 using Blog.Models;
 using Blog.Data;
 using Microsoft.EntityFrameworkCore;
+using Blog.DTOs.Post;
 
 namespace Blog.Repositories;
 
@@ -23,5 +24,11 @@ public class PostRepository(AppDbContext context) : IPostRepository
     public async Task<Post?> GetByIdAsync(int id)
     {
         return await _context.Posts.FindAsync(id);
+    }
+
+    public async Task UpdateAsync(Post updatedPost)
+    {
+        _context.Posts.Update(updatedPost);
+        await _context.SaveChangesAsync();
     }
 }

@@ -7,6 +7,7 @@ public class Post
     public string Content { get; set; } = string.Empty;
     public string Author { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public string UserId { get; set; } = null!;
     public AppUser User { get; set; } = null!;
 }
