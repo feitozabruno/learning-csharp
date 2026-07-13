@@ -31,14 +31,26 @@ public class PostsController(IPostService postService) : ControllerBase
     public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
     {
         PostResponseDto? postFound = await _postService.GetPostById(id);
-        return postFound is not null ? Ok(postFound) : NotFound("Post não encontrado.");
+
+        if (postFound is null)
+        {
+            return NotFound("Post não encontrado ou não pertence a você.");
+        }
+
+        return Ok(postFound);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, PostUpdateDto dto)
     {
         PostResponseDto? updatedPost = await _postService.UpdatePostAsync(id, dto);
-        return updatedPost is not null ? Ok(updatedPost) : NotFound("Post não encontrado.");
+
+        if (updatedPost is null)
+        {
+            return NotFound("Post não encontrado ou não pertence a você.");
+        }
+
+        return Ok(updatedPost);
     }
 
     [HttpPatch("{id}")]
@@ -50,13 +62,25 @@ public class PostsController(IPostService postService) : ControllerBase
         }
 
         PostResponseDto? updatedPost = await _postService.PatchPostAsync(id, dto);
-        return updatedPost is not null ? Ok(updatedPost) : NotFound("Post não encontrado.");
+
+        if (updatedPost is null)
+        {
+            return NotFound("Post não encontrado ou não percentence a você");
+        }
+
+        return Ok(updatedPost);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
         bool removed = await _postService.DeletePostAsync(id);
-        return removed ? NoContent() : NotFound("Post não encontrado.");
+
+        if (!removed)
+        {
+            return NotFound("Post não encontrado ou não pertence a você.");
+        }
+
+        return NoContent();
     }
 }

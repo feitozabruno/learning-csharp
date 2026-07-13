@@ -54,6 +54,7 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
     {
         Post? post = await _postRepository.GetByIdAsync(id);
         if (post is null) return null;
+        if (post.UserId != _currentUserService.UserId) return null;
 
         return new PostResponseDto
         {
@@ -70,6 +71,7 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
     {
         Post? post = await _postRepository.GetByIdAsync(id);
         if (post is null) return null;
+        if (post.UserId != _currentUserService.UserId) return null;
 
         post.Title = dto.Title;
         post.Content = dto.Content;
@@ -92,6 +94,7 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
     {
         Post? post = await _postRepository.GetByIdAsync(id);
         if (post is null) return null;
+        if (post.UserId != _currentUserService.UserId) return null;
 
         if (dto.Title is not null) post.Title = dto.Title;
         if (dto.Content is not null) post.Content = dto.Content;
@@ -114,6 +117,8 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
     {
         Post? post = await _postRepository.GetByIdAsync(id);
         if (post is null) return false;
+        if (post.UserId != _currentUserService.UserId) return false;
+
         await _postRepository.DeleteAsync(post);
         return true;
     }
