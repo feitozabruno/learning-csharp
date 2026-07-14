@@ -34,13 +34,19 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
             .Select(post => PostResponseDto.From(post));
     }
 
-    public async Task<PostResponseDto> GetUserPostByIdAsync(int id)
+    public async Task<PostResponseDto> GetPostByIdAsync(int id)
     {
         Post? post = await _postRepository
-            .GetByIdForUserAsync(id, _currentUserService.UserId)
+            .GetByIdAsync(id)
             ?? throw new NotFoundException("Post", id);
 
         return PostResponseDto.From(post);
+    }
+
+    public async Task<IEnumerable<PostResponseDto>> GetAllPostsAsync()
+    {
+        IEnumerable<Post> posts = await _postRepository.GetAllAsync();
+        return posts.Select(post => PostResponseDto.From(post));
     }
 
     public async Task<PostResponseDto> UpdatePostAsync(int id, PostUpdateDto dto)
