@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Blog.Services.Interfaces;
+using Blog.Exceptions;
 
 namespace Blog.Services;
 
@@ -14,13 +15,13 @@ public class CurrentUserService : ICurrentUserService
 
     public string UserId =>
         _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
-        ?? throw new InvalidOperationException("Usuário não autenticado.");
+        ?? throw new UnauthenticatedException("Usuário não autenticado.");
 
     public string Email =>
         _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email)
-        ?? throw new InvalidOperationException("Email não encontrado no token.");
+        ?? throw new UnauthenticatedException("Email não encontrado no token.");
 
     public string FullName =>
         _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name)
-        ?? throw new InvalidOperationException("Nome não encontrado no token.");
+        ?? throw new UnauthenticatedException("Nome não encontrado no token.");
 }

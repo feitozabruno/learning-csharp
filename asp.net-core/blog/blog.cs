@@ -9,6 +9,7 @@ using Blog.Repositories.Interfaces;
 using Blog.Repositories;
 using Blog.Services.Interfaces;
 using Blog.Services;
+using Blog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,8 +57,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddControllers();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+app.UseExceptionHandler();
 app.MapControllers();
 app.UseAuthentication(); // quem é você?
 app.UseAuthorization();  // você pode acessar isso?

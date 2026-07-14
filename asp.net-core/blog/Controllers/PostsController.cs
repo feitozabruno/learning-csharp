@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Blog.Services.Interfaces;
 using Blog.DTOs.Post;
-using Blog.Models;
 
 namespace Blog.Controllers;
 
@@ -21,66 +20,37 @@ public class PostsController(IPostService postService) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllAsync()
+    public async Task<IActionResult> GetAll()
     {
-        IEnumerable<PostResponseDto> posts = await _postService.GetAllPostsAsync();
+        IEnumerable<PostResponseDto> posts = await _postService.GetAllUserPostsAsync();
         return Ok(posts);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
+    public async Task<IActionResult> GetById([FromRoute] int id)
     {
-        PostResponseDto? postFound = await _postService.GetPostById(id);
-
-        if (postFound is null)
-        {
-            return NotFound("Post não encontrado ou não pertence a você.");
-        }
-
+        PostResponseDto postFound = await _postService.GetUserPostByIdAsync(id);
         return Ok(postFound);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, PostUpdateDto dto)
     {
-        PostResponseDto? updatedPost = await _postService.UpdatePostAsync(id, dto);
-
-        if (updatedPost is null)
-        {
-            return NotFound("Post não encontrado ou não pertence a você.");
-        }
-
+        PostResponseDto updatedPost = await _postService.UpdatePostAsync(id, dto);
         return Ok(updatedPost);
     }
 
     [HttpPatch("{id}")]
     public async Task<IActionResult> Patch([FromRoute] int id, PostPatchDto dto)
     {
-        if (dto.Title is null && dto.Content is null)
-        {
-            return BadRequest("Nenhum dado para atualizar foi enviado.");
-        }
-
-        PostResponseDto? updatedPost = await _postService.PatchPostAsync(id, dto);
-
-        if (updatedPost is null)
-        {
-            return NotFound("Post não encontrado ou não percentence a você");
-        }
-
+        PostResponseDto updatedPost = await _postService.PatchPostAsync(id, dto);
         return Ok(updatedPost);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
-        bool removed = await _postService.DeletePostAsync(id);
-
-        if (!removed)
-        {
-            return NotFound("Post não encontrado ou não pertence a você.");
-        }
-
+        await _postService.DeletePostAsync(id);
         return NoContent();
     }
 }

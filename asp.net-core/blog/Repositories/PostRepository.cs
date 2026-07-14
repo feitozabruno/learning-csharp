@@ -2,7 +2,6 @@ using Blog.Repositories.Interfaces;
 using Blog.Models;
 using Blog.Data;
 using Microsoft.EntityFrameworkCore;
-using Blog.DTOs.Post;
 
 namespace Blog.Repositories;
 
@@ -21,9 +20,22 @@ public class PostRepository(AppDbContext context) : IPostRepository
         return await _context.Posts.ToListAsync();
     }
 
+    public async Task<IEnumerable<Post>> GetAllByUserIdAsync(string userId)
+    {
+        return await _context.Posts
+            .Where(post => post.UserId == userId)
+            .ToListAsync();
+    }
+
     public async Task<Post?> GetByIdAsync(int id)
     {
         return await _context.Posts.FindAsync(id);
+    }
+
+    public async Task<Post?> GetByIdForUserAsync(int id, string userId)
+    {
+        return await _context.Posts
+            .FirstOrDefaultAsync(post => post.Id == id && post.UserId == userId);
     }
 
     public async Task UpdateAsync(Post updatedPost)

@@ -34,7 +34,15 @@ public class AuthController : ControllerBase
 
         var result = await _userManager.CreateAsync(user, dto.Password);
 
-        if (!result.Succeeded) return BadRequest(result.Errors);
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => e.Description).ToArray();
+            return ValidationProblem(new ValidationProblemDetails(
+                new Dictionary<string, string[]> { { "Password", errors } })
+            {
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
 
         return Ok("Usuário criado com sucesso.");
     }
@@ -43,14 +51,17 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
+        var validPassword = user is not null && await _userManager.CheckPasswordAsync(user, dto.Password);
 
-        if (user is null) return Unauthorized("Credenciais inválidas");
+        if (!validPassword)
+        {
+            return Problem(
+                title: "Falha na autenticação",
+                detail: "Email ou senha inválidos.",
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
 
-        var validPassword = await _userManager.CheckPasswordAsync(user, dto.Password);
-
-        if (!validPassword) return Unauthorized("Credenciais inválidas");
-
-        var token = GenerateToken(user);
+        var token = GenerateToken(user!);
         return Ok(new { token });
     }
 

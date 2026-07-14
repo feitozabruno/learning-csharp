@@ -1,4 +1,5 @@
 using Blog.DTOs.Post;
+using Blog.Exceptions;
 using Blog.Models;
 using Blog.Repositories.Interfaces;
 using Blog.Services.Interfaces;
@@ -21,105 +22,66 @@ public class PostService(ICurrentUserService currentUserService, IPostRepository
         };
 
         await _postRepository.AddAsync(newPost);
-
-        return new PostResponseDto
-        {
-            Id = newPost.Id,
-            Title = newPost.Title,
-            Content = newPost.Content,
-            Author = newPost.Author,
-            CreatedAt = newPost.CreatedAt,
-            UpdatedAt = newPost.UpdatedAt
-        };
+        return PostResponseDto.From(newPost);
     }
 
-    public async Task<IEnumerable<PostResponseDto>> GetAllPostsAsync()
+    public async Task<IEnumerable<PostResponseDto>> GetAllUserPostsAsync()
     {
-        IEnumerable<Post> posts = await _postRepository.GetAllAsync();
+        IEnumerable<Post> posts = await _postRepository.GetAllByUserIdAsync(_currentUserService.UserId);
 
         return posts
             .Where(post => post.UserId == _currentUserService.UserId)
-            .Select(post => new PostResponseDto
-            {
-                Id = post.Id,
-                Title = post.Title,
-                Content = post.Content,
-                Author = post.Author,
-                CreatedAt = post.CreatedAt,
-                UpdatedAt = post.UpdatedAt
-            });
+            .Select(post => PostResponseDto.From(post));
     }
 
-    public async Task<PostResponseDto?> GetPostById(int id)
+    public async Task<PostResponseDto> GetUserPostByIdAsync(int id)
     {
-        Post? post = await _postRepository.GetByIdAsync(id);
-        if (post is null) return null;
-        if (post.UserId != _currentUserService.UserId) return null;
+        Post? post = await _postRepository
+            .GetByIdForUserAsync(id, _currentUserService.UserId)
+            ?? throw new NotFoundException("Post", id);
 
-        return new PostResponseDto
-        {
-            Id = post.Id,
-            Title = post.Title,
-            Content = post.Content,
-            Author = post.Author,
-            CreatedAt = post.CreatedAt,
-            UpdatedAt = post.UpdatedAt
-        };
+        return PostResponseDto.From(post);
     }
 
-    public async Task<PostResponseDto?> UpdatePostAsync(int id, PostUpdateDto dto)
+    public async Task<PostResponseDto> UpdatePostAsync(int id, PostUpdateDto dto)
     {
-        Post? post = await _postRepository.GetByIdAsync(id);
-        if (post is null) return null;
-        if (post.UserId != _currentUserService.UserId) return null;
+        Post? post = await _postRepository
+            .GetByIdForUserAsync(id, _currentUserService.UserId)
+            ?? throw new NotFoundException("Post", id);
 
         post.Title = dto.Title;
         post.Content = dto.Content;
         post.UpdatedAt = DateTime.UtcNow;
 
         await _postRepository.UpdateAsync(post);
-
-        return new PostResponseDto
-        {
-            Id = post.Id,
-            Title = post.Title,
-            Content = post.Content,
-            Author = post.Author,
-            CreatedAt = post.CreatedAt,
-            UpdatedAt = post.UpdatedAt
-        };
+        return PostResponseDto.From(post);
     }
 
-    public async Task<PostResponseDto?> PatchPostAsync(int id, PostPatchDto dto)
+    public async Task<PostResponseDto> PatchPostAsync(int id, PostPatchDto dto)
     {
-        Post? post = await _postRepository.GetByIdAsync(id);
-        if (post is null) return null;
-        if (post.UserId != _currentUserService.UserId) return null;
+        if (dto.Title is null && dto.Content is null)
+        {
+            throw new ValidationException("Nenhum dado para atualizar foi enviado.");
+        }
+
+        Post? post = await _postRepository
+            .GetByIdForUserAsync(id, _currentUserService.UserId)
+            ?? throw new NotFoundException("Post", id);
 
         if (dto.Title is not null) post.Title = dto.Title;
         if (dto.Content is not null) post.Content = dto.Content;
         post.UpdatedAt = DateTime.Now;
 
         await _postRepository.UpdateAsync(post);
-
-        return new PostResponseDto
-        {
-            Id = post.Id,
-            Title = post.Title,
-            Content = post.Content,
-            Author = post.Author,
-            CreatedAt = post.CreatedAt,
-            UpdatedAt = post.UpdatedAt
-        };
+        return PostResponseDto.From(post);
     }
 
-    public async Task<bool> DeletePostAsync(int id)
+    public async Task DeletePostAsync(int id)
     {
-        Post? post = await _postRepository.GetByIdAsync(id);
-        if (post is null) return false;
-        if (post.UserId != _currentUserService.UserId) return false;
+        Post? post = await _postRepository
+            .GetByIdForUserAsync(id, _currentUserService.UserId)
+            ?? throw new NotFoundException("Post", id);
 
         await _postRepository.DeleteAsync(post);
-        return true;
     }
 }
