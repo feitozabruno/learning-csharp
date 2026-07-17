@@ -1,6 +1,6 @@
 namespace Blog.DTOs.Post;
 
 public record PostPatchDto(
-    string? Title,
-    string? Content
+    string? Title = null,
+    string? Content = null
 );
