@@ -1,5 +1,6 @@
 <Solution>
-  <Project Path="money/money.csproj" />
   <Project Path="todo/todo.csproj" />
+  <Project Path="money/money.csproj" />
   <Project Path="blog/blog.csproj" />
+  <Project Path="blog.tests/blog.tests.csproj" />
 </Solution>
