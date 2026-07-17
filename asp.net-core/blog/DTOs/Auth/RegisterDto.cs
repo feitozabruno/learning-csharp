@@ -3,14 +3,13 @@ using System.ComponentModel.DataAnnotations;
 namespace Blog.DTOs.Auth;
 
 public record RegisterDto(
-    [Required]
+    [Required(ErrorMessage = "O nome é obrigatório.")]
     string FullName,
 
-    [Required]
-    [EmailAddress]
+    [Required(ErrorMessage = "O email é obrigatório.")]
+    [EmailAddress(ErrorMessage = "Email inválido.")]
     string Email,
 
-    [Required]
-    [MinLength(6)]
+    [Required(ErrorMessage = "A senha é obrigatória.")]
     string Password
 );
