@@ -3,7 +3,6 @@ using Blog.DTOs.Auth;
 using Blog.Tests.Fixtures;
 using FluentAssertions;
 using System.Net;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Tests.Integration;
 
@@ -45,7 +44,7 @@ public class AuthTests : IClassFixture<CustomWebApplicationFactory>
 
         await _client.PostAsJsonAsync("/api/auth/register", dto);
         var response = await _client.PostAsJsonAsync("/api/auth/register", dto);
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetailsResponse>();
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         body!.Title.Should().Be("Erro de validação");
@@ -60,7 +59,7 @@ public class AuthTests : IClassFixture<CustomWebApplicationFactory>
         var dto = new RegisterDto("John Doe", $"test_{Guid.NewGuid()}@email.com", "Senha");
 
         var response = await _client.PostAsJsonAsync("/api/auth/register", dto);
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetailsResponse>();
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         body!.Title.Should().Be("Erro de validação");
@@ -89,7 +88,7 @@ public class AuthTests : IClassFixture<CustomWebApplicationFactory>
         var dto = new LoginDto(user.Email, "Password");
 
         var response = await _client.PostAsJsonAsync("/api/auth/login", dto);
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetailsResponse>();
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         body!.Title.Should().Be("Erro de validação");
@@ -104,7 +103,7 @@ public class AuthTests : IClassFixture<CustomWebApplicationFactory>
         var dto = new LoginDto("invalid@email.com", "password");
 
         var response = await _client.PostAsJsonAsync("/api/auth/login", dto);
-        var body = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        var body = await response.Content.ReadFromJsonAsync<ProblemDetailsResponse>();
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         body!.Title.Should().Be("Erro de validação");
